@@ -1,26 +1,140 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --font-serif: var(--font-serif), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-sans), "DM Sans", system-ui, sans-serif;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* ── Color System ────────────────────────── */
+  /* Dark base */
+  --color-ink:       #0D0D0D;
+  --color-ink-soft:  #141414;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Warm off-whites */
+  --color-cream:     #F5F0E8;
+  --color-parchment: #EDE7D9;
+
+  /* Forest greens */
+  --color-pine:      #1E372D;
+  --color-pine-dark: #0C1A14;
+  --color-pine-mid:  #264D3B;
+
+  /* Earthy tones */
+  --color-earth:     #7A624B;
+  --color-earth-lt:  #A08060;
+
+  /* Gold accents */
+  --color-gold:      #C6A56B;
+  --color-gold-lt:   #E2C99A;
+
+  /* Neutral grays */
+  --color-slate:     #2A2A2A;
+  --color-mist:      #E8E4DE;
+
+  /* ── Animations ─────────────────────────── */
+  --animate-marquee:         marquee 55s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 55s linear infinite;
+
+  @keyframes marquee {
+    0%   { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-reverse {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0%); }
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0px);   }
+    50%       { transform: translateY(-12px); }
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0);    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Base ────────────────────────────────── */
+:root {
+  --background: #0D0D0D;
+  --foreground: #F5F0E8;
 }
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Custom scrollbar ───────────────────── */
+::-webkit-scrollbar       { width: 5px; }
+::-webkit-scrollbar-track { background: #0D0D0D; }
+::-webkit-scrollbar-thumb {
+  background: #C6A56B;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: #E2C99A; }
+
+/* ── Lenis smooth scroll ────────────────── */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth         { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overflow: clip; }
+.lenis.lenis-stopped        { overflow: hidden; }
+.lenis.lenis-scrolling iframe { pointer-events: none; }
+
+/* ── Glass utilities ─────────────────────  */
+.glass-dark {
+  background: rgba(13, 13, 13, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.glass-light {
+  background: rgba(245, 240, 232, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── Text stroke ────────────────────────── */
+.text-stroke-cream {
+  -webkit-text-stroke: 1px #F5F0E8;
+  color: transparent;
+}
+.text-stroke-gold {
+  -webkit-text-stroke: 1px #C6A56B;
+  color: transparent;
+}
+
+/* ── Waveform animations ────────────────── */
+@keyframes waveform-bounce-1 {
+  0%, 100% { transform: scaleY(0.2); }
+  50%       { transform: scaleY(0.85); }
+}
+@keyframes waveform-bounce-2 {
+  0%, 100% { transform: scaleY(0.4); }
+  50%       { transform: scaleY(1.0); }
+}
+@keyframes waveform-bounce-3 {
+  0%, 100% { transform: scaleY(0.15); }
+  50%       { transform: scaleY(0.7); }
+}
+@keyframes waveform-bounce-4 {
+  0%, 100% { transform: scaleY(0.3); }
+  50%       { transform: scaleY(0.9); }
+}
+
+.animate-waveform-1 { animation: waveform-bounce-1 1.2s ease-in-out infinite; }
+.animate-waveform-2 { animation: waveform-bounce-2 0.8s ease-in-out infinite; }
+.animate-waveform-3 { animation: waveform-bounce-3 1.5s ease-in-out infinite; }
+.animate-waveform-4 { animation: waveform-bounce-4 1.0s ease-in-out infinite; }
