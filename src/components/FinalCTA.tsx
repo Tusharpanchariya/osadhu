@@ -22,7 +22,7 @@ export default function FinalCTA({ onOpenApplication }: Props) {
           viewport={{ once: true }} transition={{ duration: 0.8, ease }}
           className="font-sans text-[10px] tracking-[0.4em] uppercase text-pine font-bold"
         >
-          Your creative escape awaits
+          Your creative escape awaits for you
         </motion.p>
 
         <motion.h2
