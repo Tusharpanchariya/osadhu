@@ -7,23 +7,23 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 const blocks = [
   {
-    tag:   "01 — Acoustics",
+    tag:   "01 — Studio",
     title: "Professional\nRecording Studio",
-    body:  "Custom-built acoustic rooms in local Himalayan pine. Class-A preamps, vintage condensers, analog mixing. Engineer your sound while the mountains fill your view.",
+    body:  "Custom-built acoustic rooms in local Himalayan residence. Fully equipped studio ideal for recording, production, songwriting, mixing and creative collaboration. Engineer your sound while gazing at the mountain range.",
     image: "/images/studio_interior.png",
     alt:   "Studio interior at Osadho Records",
   },
   {
     tag:   "02 — Residence",
     title: "Traditional\nHimalayan Stay",
-    body:  "Private chalet rooms of stone, timber, and slate. Heated floors, organic linens, ensuite bathrooms, and a composing desk facing deep pine forest.",
+    body:  "Private chalet rooms with ensuite bathroom in a neighbouring house, with forest and mountain views. Two freshly prepared vegetarian Pahadi meals per day.",
     image: "/images/studio_accommodation.png",
     alt:   "Artist accommodation at Osadho Records",
   },
   {
-    tag:   "03 — Immersion",
+    tag:   "03 — Creative Environment",
     title: "Mountain\nLiving",
-    body:  "Pahadi organic meals, forest walks, evening bonfire circles. Let alpine silence clear the mind and expand creative clarity.",
+    body:  "Quiet mountain setting with hiking trails and forest walks. Traditional Himalayan village atmosphere. Open lawn suitable for yoga and meditation. Expand your creative clarity in the silence of the valley.",
     image: "/images/nature_immersion.png",
     alt:   "Himalayan forest and nature walks",
   },
@@ -39,7 +39,7 @@ export default function Experience() {
           viewport={{ once: true }} transition={{ duration: 0.8, ease }}
           className="font-sans text-[10px] tracking-[0.4em] uppercase text-earth mb-4"
         >
-          The Experience
+          THE EXPERIENCE
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
@@ -48,7 +48,7 @@ export default function Experience() {
           style={{ fontSize: "clamp(2.2rem, 4.5vw, 4rem)" }}
         >
           Slow living &amp;<br />
-          <em className="font-normal text-earth" style={{ fontStyle: "italic" }}>deep songwriting.</em>
+          <em className="font-normal text-earth" style={{ fontStyle: "italic" }}>expanded Creation.</em>
         </motion.h2>
       </div>
 

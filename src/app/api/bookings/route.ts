@@ -43,7 +43,7 @@ export async function GET() {
     }
 
     // Try query with new schema
-    let bookingsResponse = await supabaseAdmin
+    const bookingsResponse = await supabaseAdmin
       .from("bookings")
       .select("start_date, end_date, booking_type, time_slot")
       .eq("status", "confirmed");
@@ -64,6 +64,7 @@ export async function GET() {
       }
       
       // Map legacy select entries to new schema structure
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       bookings = (fallbackResponse.data || []).map((b: any) => ({
         start_date: b.start_date,
         end_date: b.end_date,
@@ -80,9 +81,9 @@ export async function GET() {
     const activeBlocked = blockedError ? [] : (blocked || []);
 
     return NextResponse.json({ bookings, blocked: activeBlocked });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in GET /api/bookings:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
 
@@ -186,6 +187,7 @@ export async function POST(req: Request) {
     const currentBookings = fetchErr ? [] : (activeBookings || []);
 
     if (booking_type === "single") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isBooked = currentBookings.some((b: any) => {
         return b.start_date === start_date && b.time_slot === time_slot;
       });
@@ -193,6 +195,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "The selected time slot is already reserved.", code: "DOUBLE_BOOKING" }, { status: 400 });
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isOverlap = currentBookings.some((b: any) => {
         return b.start_date <= end_date && b.end_date >= start_date;
       });
@@ -202,7 +205,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Insert into database
-    let insertResponse = await supabaseAdmin
+    const insertResponse = await supabaseAdmin
       .from("bookings")
       .insert([
         {
@@ -304,9 +307,9 @@ export async function POST(req: Request) {
       message: "Booking confirmed successfully!",
       booking: insertResponse.data
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in POST /api/bookings:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
 

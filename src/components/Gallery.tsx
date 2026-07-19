@@ -109,11 +109,11 @@ export default function Gallery() {
       <div className="max-w-7xl mx-auto">
         {/* Title */}
         <div className="text-center mb-16 space-y-4">
-          <span className="text-gold uppercase tracking-[0.25em] text-xs font-semibold block">Visual Journal</span>
+          <span className="text-gold uppercase tracking-[0.25em] text-xs font-semibold block">Get a feel</span>
           <h2 className="font-serif text-4xl md:text-5xl font-bold tracking-tight text-pine">
             Studio Gallery
           </h2>
-          <p className="text-charcoal/70 max-w-xl mx-auto font-light text-sm">
+          <p className="text-pine max-w-xl mx-auto font-light text-sm">
             A window into daily life at Osadho Records: tracking sounds, sleeping in cozy chalets, and exploring Harsil.
           </p>
         </div>
@@ -162,12 +162,6 @@ export default function Gallery() {
 
                 {/* Info overlays on hover */}
                 <div className="absolute inset-0 p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10">
-                  <span className="text-gold uppercase tracking-[0.2em] text-[10px] font-bold">
-                    {item.category}
-                  </span>
-                  <h3 className="font-serif text-cream text-lg font-semibold tracking-wide mt-1">
-                    {item.title}
-                  </h3>
                   <div className="absolute top-6 right-6 w-9 h-9 rounded-full bg-cream/20 backdrop-blur flex items-center justify-center text-cream border border-cream/25">
                     <Maximize2 className="w-4 h-4" />
                   </div>

@@ -7,8 +7,7 @@ import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Experience from "@/components/Experience";
 import StudioTour from "@/components/StudioTour";
-import WhatWeOffer from "@/components/WhatWeOffer";
-import ResidencyPackages from "@/components/ResidencyPackages";
+import ResidencyEnquiryForm from "@/components/ResidencyEnquiryForm";
 import Marquee from "@/components/Marquee";
 import WhyHarsil from "@/components/WhyHarsil";
 import WhereWeAre from "@/components/WhereWeAre";
@@ -16,21 +15,19 @@ import Gallery from "@/components/Gallery";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import StudioCalendar from "@/components/StudioCalendar";
-import BookingSection from "@/components/BookingSection";
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState("");
   const [calendarKey, setCalendarKey] = useState(0);
+  const [isEnquiryFormOpen, setIsEnquiryFormOpen] = useState(false);
 
-  const handleOpenApplication = (packageName: string = "") => {
-    // Smoothly scroll down to the inline booking webpage section
-    document.getElementById("booking-form-section")?.scrollIntoView({ behavior: "smooth" });
+  const handleOpenApplication = () => {
+    setIsEnquiryFormOpen(true);
   };
 
   const handleOpenApplicationWithDate = (date: string) => {
     setSelectedDate(date);
-    // Smoothly scroll down to the inline booking webpage section
-    document.getElementById("booking-form-section")?.scrollIntoView({ behavior: "smooth" });
+    setIsEnquiryFormOpen(true);
   };
 
   const handleBookingConfirmed = () => {
@@ -54,12 +51,12 @@ export default function Home() {
 
   return (
     <SmoothScroll>
-      <Navbar onOpenApplication={() => handleOpenApplication("")} />
+      <Navbar onOpenApplication={handleOpenApplication} />
       
       <main className="relative flex flex-col w-full">
         {/* Hero Section */}
         <Hero 
-          onOpenApplication={() => handleOpenApplication("")} 
+          onOpenApplication={handleOpenApplication} 
           onOpenTour={handleOpenTour} 
         />
         
@@ -71,15 +68,17 @@ export default function Home() {
         
         {/* Studio Tour Section */}
         <StudioTour />
-        
-        {/* What We Offer Section */}
-        <WhatWeOffer />
+
         
         {/* Who Is This For Marquee */}
         <Marquee />
         
-        {/* Residency Packages Section */}
-        <ResidencyPackages onOpenApplication={handleOpenApplication} />
+        {/* Residency Enquiry Form Modal */}
+        <ResidencyEnquiryForm 
+          isOpen={isEnquiryFormOpen} 
+          onClose={() => setIsEnquiryFormOpen(false)}
+          initialStartDate={selectedDate}
+        />
         
         {/* Studio Availability Calendar Section */}
         <section id="calendar" className="bg-ink py-24 md:py-36 border-t border-white/5">
@@ -98,12 +97,25 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Inline Booking & Payment Section */}
-        <BookingSection 
-          selectedDate={selectedDate} 
-          onBookingConfirmed={handleBookingConfirmed} 
-        />
-        
+        {/* Apply for Residency CTA Section */}
+        <section className="bg-cream py-24 md:py-36 px-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-pine/5 to-transparent pointer-events-none" />
+          <div className="max-w-4xl mx-auto text-center relative z-10 space-y-8">
+            <span className="text-pine uppercase tracking-[0.25em] text-xs font-semibold block">Your Creative Journey</span>
+            <h2 className="font-serif font-bold text-pine-dark text-4xl md:text-5xl lg:text-6xl leading-tight">
+              Apply for an Artist Residency
+            </h2>
+            <p className="text-pine max-w-2xl mx-auto font-light text-base md:text-lg leading-relaxed pb-8">
+              Every residency is curated personally to create the best possible experience for each artist. We invite you to share your project and vision with us.
+            </p>
+            <button 
+              onClick={() => setIsEnquiryFormOpen(true)}
+              className="inline-flex items-center gap-3 px-10 py-5 bg-pine text-cream rounded-full font-bold uppercase tracking-widest text-sm shadow-xl shadow-pine/20 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pine/30 transition-all"
+            >
+              Start Application <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </section>
         {/* Why Harsil Section */}
         <WhyHarsil />
         
@@ -114,7 +126,7 @@ export default function Home() {
         <Gallery />
         
         {/* Final CTA Section */}
-        <FinalCTA onOpenApplication={() => handleOpenApplication("")} />
+        <FinalCTA onOpenApplication={handleOpenApplication} />
       </main>
 
       <Footer />

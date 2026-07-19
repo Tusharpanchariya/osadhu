@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Compass, Car, Plane, Train } from "lucide-react";
+import { MapPin, Navigation, Car, Plane, Train } from "lucide-react";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -10,17 +10,17 @@ export default function WhereWeAre() {
     {
       icon: Plane,
       title: "By Air",
-      desc: "Fly into Jolly Grant Airport in Dehradun (DED). From there, enjoy a scenic 7-8 hour taxi drive or a chartered helicopter flight to the Harsil helipad.",
+      desc: "Fly into Jolly Grant Airport in Dehradun (DED). From there, you can enjoy a scenic 10 hour drive by private taxi through the mountains of Uttarakhand.",
     },
     {
       icon: Car,
       title: "By Road",
-      desc: "Drive from Dehradun or Rishikesh via the national highway. Pass through Mussoorie, Uttarkashi, and follow the river Bhagirathi up into the valley.",
+      desc: "Drive or hire a private taxi from Dehradun or Rishikesh via the national highway. Pass through Mussoorie, Uttarkashi and follow the river Bhagirathi up into the valley. Get in touch with us and we will be happy to assist you in finding a driver.",
     },
     {
       icon: Train,
       title: "By Rail",
-      desc: "Dehradun (DDN) and Yog Nagari Rishikesh (YNRK) are the nearest rail junctions, well-connected to major Indian metros.",
+      desc: "Dehradun (DDN) and Yog Nagari Rishikesh (YNRK) are the nearest major railway stations, with regular train connections to Delhi and other major Indian cities. From either station, Harsil can be reached by private taxi.",
     },
   ];
 
@@ -57,12 +57,8 @@ export default function WhereWeAre() {
             className="space-y-4 max-w-md lg:ml-auto"
           >
             <p className="font-sans text-cream/45 text-sm leading-[1.8] font-light">
-              Osadho Records is isolated at 7,860 ft in Harsil Valley, Uttarakhand. Surrounded by ancient deodar cedar forests, snow-clad peaks, and the pure waters of the Bhagirathi River.
+              Osadho Records is isolated at 7,860 ft in Harsil Valley, Uttarakhand. Surrounded by untouched pine forests, snow peaks and the pure waters of the Bhagirathi River. A few minutes drive from Gangotri Dham.
             </p>
-            <div className="flex items-center gap-3 text-gold text-xs tracking-wider font-semibold uppercase">
-              <MapPin className="w-4 h-4 text-gold" />
-              <span>31.0343° N, 78.7383° E · Harsil Valley</span>
-            </div>
           </motion.div>
         </div>
 

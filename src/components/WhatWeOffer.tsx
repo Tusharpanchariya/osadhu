@@ -34,7 +34,7 @@ export default function WhatWeOffer() {
             >
               Everything you need,<br />
               <em className="font-normal text-gold" style={{ fontStyle: "italic" }}>
-                nothing you don't.
+                nothing you don&apos;t.
               </em>
             </h2>
           </motion.div>

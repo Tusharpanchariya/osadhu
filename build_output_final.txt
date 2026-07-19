@@ -1,0 +1,23 @@
+
+> osadho-records@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.7s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/api/bookings/route.ts:197:16
+Type error: 'b.start_date' is of type 'unknown'.
+
+  [90m195 |[0m     } [36melse[0m {
+  [90m196 |[0m       [36mconst[0m isOverlap = currentBookings.some((b: [33mRecord[0m<string, unknown>) => {
+[31m[1m>[0m [90m197 |[0m         [36mreturn[0m b.start_date <= end_date && b.end_date >= start_date;
+  [90m    |[0m                [31m[1m^[0m
+  [90m198 |[0m       });
+  [90m199 |[0m       [36mif[0m (isOverlap) {
+  [90m200 |[0m         [36mreturn[0m [33mNextResponse[0m.json({ error: [32m"One or more dates in your selected range are a...[0m
+Next.js build worker exited with code: 1 and signal: null

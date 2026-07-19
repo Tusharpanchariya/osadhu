@@ -27,7 +27,7 @@ export default function Footer() {
             Osadho <span className="text-gold">Records</span>
           </span>
           <p className="font-sans text-cream/30 text-xs leading-[1.9] font-light max-w-xs">
-            The Himalayas' first residential recording studio.<br />
+            The Himalayas&apos; first residential recording studio.<br />
             Harsil Valley, Uttarakhand, India.
           </p>
         </div>

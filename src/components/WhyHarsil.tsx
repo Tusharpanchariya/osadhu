@@ -44,7 +44,11 @@ export default function WhyHarsil() {
             The rare conditions where creativity naturally flourishes.
           </span>
         </h2>
-        <div className="w-8 h-[1px] bg-gold/40 mx-auto mt-10" />
+        <div className="w-8 h-[1px] bg-gold/40 mx-auto mt-10 mb-8" />
+        <p className="font-sans text-cream/70 text-sm md:text-base leading-relaxed font-light">
+          Harsil is one of the most beautiful and peaceful regions of the Indian Himalayas. 
+          Far from crowded tourist destinations, the valley offers a unique combination of natural beauty, simplicity, and authentic mountain life. The absence of urban distractions, combined with the presence of vast landscapes and silence, creates an ideal environment for deep work and artistic exploration.
+        </p>
       </motion.div>
     </section>
   );

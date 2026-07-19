@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Check, Calendar as CalendarIcon, CreditCard, Sparkles, AlertCircle, Info, 
+import {
+  Calendar as CalendarIcon, CreditCard, Sparkles, AlertCircle, Info, 
   Landmark, HelpCircle, Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Globe, Music, Video, Link, Phone, FileText, User
 } from "lucide-react";
@@ -74,6 +74,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
   // Sync prop selectedDate
   useEffect(() => {
     if (selectedDate) {
+      // eslint-disable-next-line
       setStartDate(selectedDate);
       if (bookingType === "single") {
         setEndDate(selectedDate);
@@ -99,6 +100,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchAvailability();
   }, []);
 
@@ -167,7 +169,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
           setStartDate(dateStr);
         } else {
           // Check range availability before confirming end date
-          let tempDate = new Date(startDate);
+          const tempDate = new Date(startDate);
           const finalDate = new Date(dateStr);
           let conflict = false;
 
@@ -195,7 +197,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
 
   const getDayClassNames = (dateStr: string) => {
     const status = getDateStatus(dateStr);
-    let base = "h-11 rounded-md text-xs font-semibold font-sans relative flex items-center justify-center transition-all duration-200 border";
+    const base = "h-11 rounded-md text-xs font-semibold font-sans relative flex items-center justify-center transition-all duration-200 border";
     
     // Status colors
     if (status === "past") {
@@ -276,8 +278,8 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
         origin: { y: 0.6 },
         colors: ["#C6A56B", "#F5F0E8", "#1E372D"]
       });
-    } catch (err: any) {
-      setErrorMsg(err.message || "Reservation processing error.");
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Reservation processing error.");
     } finally {
       setIsSubmitting(false);
     }
@@ -307,7 +309,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
         return;
       }
     } else {
-      let temp = new Date(startDate);
+      const temp = new Date(startDate);
       const endLimit = new Date(endDate);
       let conflict = false;
       while (temp <= endLimit) {
@@ -337,16 +339,18 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
           currency: "INR",
           name: "Osadho Records",
           description: "Residency Reservation Payment",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           handler: function (response: any) {
             executeBooking(response.razorpay_payment_id || "PAY-RAZORPAY", "paid");
           },
           prefill: { name, email },
           theme: { color: "#C6A56B" }
         };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
         setIsSubmitting(false);
-      } catch (err) {
+      } catch {
         setErrorMsg("Razorpay script not ready. Falling back to test transaction.");
         await executeBooking("PAY-RAZORPAY-SIMULATED", "paid");
       }

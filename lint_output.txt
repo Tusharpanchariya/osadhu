@@ -1,0 +1,85 @@
+
+> osadho-records@0.1.0 lint
+> eslint
+
+
+D:\Osadhu\src\app\api\bookings\route.ts
+   46:9   error  'bookingsResponse' is never reassigned. Use 'const' instead  prefer-const
+   67:56  error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+   83:19  error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+  189:49  error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+  196:50  error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+  205:9   error  'insertResponse' is never reassigned. Use 'const' instead    prefer-const
+  307:19  error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+
+D:\Osadhu\src\app\page.tsx
+  25:34  warning  'packageName' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Osadhu\src\components\About.tsx
+  66:13  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  66:56  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+D:\Osadhu\src\components\BookingSection.tsx
+    6:3   warning  'Check' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   77:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\Osadhu\src\components\BookingSection.tsx:77:7
+  75 |   useEffect(() => {
+  76 |     if (selectedDate) {
+> 77 |       setStartDate(selectedDate);
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  78 |       if (bookingType === "single") {
+  79 |         setEndDate(selectedDate);
+  80 |       }  react-hooks/set-state-in-effect
+  102:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\Osadhu\src\components\BookingSection.tsx:102:5
+  100 |
+  101 |   useEffect(() => {
+> 102 |     fetchAvailability();
+      |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  103 |   }, []);
+  104 |
+  105 |   const totalDays = (() => {                                                                 react-hooks/set-state-in-effect
+  170:15  error    'tempDate' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       prefer-const
+  198:9   error    'base' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           prefer-const
+  279:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  310:11  error    'temp' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           prefer-const
+  340:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  346:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  349:16  warning  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+
+D:\Osadhu\src\components\Footer.tsx
+  30:26  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\Osadhu\src\components\Hero.tsx
+  17:32  warning  'onOpenApplication' is defined but never used  @typescript-eslint/no-unused-vars
+  17:51  warning  'onOpenTour' is defined but never used         @typescript-eslint/no-unused-vars
+
+D:\Osadhu\src\components\Navbar.tsx
+  61:3  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Osadhu\src\components\StudioCalendar.tsx
+  4:10  warning  'motion' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\Osadhu\src\components\WhatWeOffer.tsx
+  37:32  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\Osadhu\src\components\WhereWeAre.tsx
+  4:30  warning  'Compass' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 27 problems (19 errors, 8 warnings)
+  5 errors and 0 warnings potentially fixable with the `--fix` option.
+

@@ -40,7 +40,7 @@ export default function About() {
           viewport={{ once: true }}
           className="font-sans text-[10px] tracking-[0.4em] uppercase text-gold mb-6"
         >
-          Sanctuary Philosophy
+          OUR VISION
         </motion.p>
 
         {/* Headline */}
@@ -63,7 +63,7 @@ export default function About() {
           className="border-l-2 border-gold pl-6 mb-10"
         >
           <p className="font-serif italic text-cream/60 text-xl md:text-2xl leading-snug font-light">
-            "Far from noise,<br />closer to your sound."
+            &quot;Away from noise,<br />closer to your sound.&quot;
           </p>
         </motion.blockquote>
 
@@ -73,10 +73,10 @@ export default function About() {
           viewport={{ once: true }}
           className="font-sans text-cream/45 text-sm md:text-base leading-[1.9] font-light max-w-2xl"
         >
-          Nestled at 7,860 ft inside the pine-scented biosphere of Harsil Valley, 
+          Hidden at 7,860 ft inside the pine-scented biosphere of Harsil Valley, 
           Osadho Records offers musicians a dedicated residential workspace. 
-          Here, the slow rhythms of Himalayan life replace the pressure of commercial studios — 
-          opening space for deeper creative work.
+          When the slow rhythms of Himalayan life replace the pressure of commercial studios, 
+          deeper creative work emerges.
         </motion.p>
       </div>
     </section>

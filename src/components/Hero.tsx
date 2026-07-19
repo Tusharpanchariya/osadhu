@@ -73,10 +73,10 @@ export default function Hero({ onOpenApplication, onOpenTour }: HeroProps) {
           className="font-serif font-bold text-cream leading-none tracking-tight"
           style={{ fontSize: "clamp(2.6rem, 6.5vw, 6rem)" }}
         >
-          Where the mountains
+          Where music
           <br />
           <em className="font-serif font-normal not-italic text-gold" style={{ fontStyle: "italic" }}>
-            become part of the music.
+            finds its home in the mountains.
           </em>
         </motion.h1>
 
@@ -89,34 +89,7 @@ export default function Hero({ onOpenApplication, onOpenTour }: HeroProps) {
         />
 
         {/* Two buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.8, duration: 1, ease }}
-          className="flex items-center gap-4 flex-wrap justify-center"
-        >
-          {/* Primary */}
-          <button
-            onClick={() => document.getElementById("packages")?.scrollIntoView({ behavior: "smooth" })}
-            className="text-[10px] tracking-[0.28em] uppercase font-semibold bg-gold hover:bg-gold-lt text-ink px-8 py-3.5 transition-all duration-300 rounded-sm shadow-xl hover:shadow-gold/30"
-          >
-            Explore Residency
-          </button>
 
-          {/* Studio Tour — ghost button with pulse ring */}
-          <button
-            onClick={() => setTourOpen(true)}
-            className="group flex items-center gap-3 text-[10px] tracking-[0.28em] uppercase font-semibold text-cream/70 hover:text-cream transition-colors duration-300"
-          >
-            <span className="relative flex items-center justify-center w-8 h-8">
-              <span className="absolute inset-0 rounded-full border border-gold/50 animate-ping opacity-50 group-hover:opacity-80" />
-              <span className="relative w-8 h-8 rounded-full border border-gold/70 flex items-center justify-center group-hover:bg-gold/10 transition-colors duration-300">
-                <Play className="w-2.5 h-2.5 fill-gold text-gold ml-0.5" />
-              </span>
-            </span>
-            Studio Tour
-          </button>
-        </motion.div>
       </div>
 
       {/* ── SCROLL INDICATOR ────────────────────────────────────── */}

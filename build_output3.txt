@@ -1,0 +1,23 @@
+
+> osadho-records@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.3s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/page.tsx:57:62
+Type error: Expected 0 arguments, but got 1.
+
+  [90m55 |[0m   [36mreturn[0m (
+  [90m56 |[0m     <[33mSmoothScroll[0m>
+[31m[1m>[0m [90m57 |[0m       <[33mNavbar[0m onOpenApplication={() => handleOpenApplication([32m""[0m)} />
+  [90m   |[0m                                                              [31m[1m^[0m
+  [90m58 |[0m       
+  [90m59 |[0m       <main className=[32m"relative flex flex-col w-full"[0m>
+  [90m60 |[0m         {[90m/* Hero Section */[0m}
+Next.js build worker exited with code: 1 and signal: null

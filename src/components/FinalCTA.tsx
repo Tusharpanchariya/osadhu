@@ -20,9 +20,9 @@ export default function FinalCTA({ onOpenApplication }: Props) {
         <motion.p
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.8, ease }}
-          className="font-sans text-[10px] tracking-[0.4em] uppercase text-gold/70"
+          className="font-sans text-[10px] tracking-[0.4em] uppercase text-pine font-bold"
         >
-          Your creative sabbatical awaits
+          Your creative escape awaits
         </motion.p>
 
         <motion.h2
@@ -38,7 +38,7 @@ export default function FinalCTA({ onOpenApplication }: Props) {
         <motion.p
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
           viewport={{ once: true }} transition={{ delay: 0.25, duration: 0.9, ease }}
-          className="font-sans text-cream/40 text-sm font-light leading-[1.9] max-w-md"
+          className="font-sans text-pine text-sm font-light leading-[1.9] max-w-md"
         >
           Space is limited. Applications reviewed on a rolling basis.
         </motion.p>

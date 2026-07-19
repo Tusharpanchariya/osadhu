@@ -13,18 +13,18 @@
   --color-cream:     #F5F0E8;
   --color-parchment: #EDE7D9;
 
-  /* Forest greens */
-  --color-pine:      #1E372D;
-  --color-pine-dark: #0C1A14;
-  --color-pine-mid:  #264D3B;
+  /* Background overrides as requested (was dark green) */
+  --color-pine:      #CDD4CD;
+  --color-pine-dark: #BCC4BC; /* Slightly darker for hover states */
+  --color-pine-mid:  #C4CCC4;
 
   /* Earthy tones */
   --color-earth:     #7A624B;
   --color-earth-lt:  #A08060;
 
-  /* Gold accents */
-  --color-gold:      #C6A56B;
-  --color-gold-lt:   #E2C99A;
+  /* Gold accents to CDD4CD as requested (yellow text and boxes) */
+  --color-gold:      #CDD4CD;
+  --color-gold-lt:   #BCC4BC;
 
   /* Neutral grays */
   --color-slate:     #2A2A2A;
@@ -138,3 +138,34 @@ html.lenis, html.lenis body { height: auto; }
 .animate-waveform-2 { animation: waveform-bounce-2 0.8s ease-in-out infinite; }
 .animate-waveform-3 { animation: waveform-bounce-3 1.5s ease-in-out infinite; }
 .animate-waveform-4 { animation: waveform-bounce-4 1.0s ease-in-out infinite; }
+
+/* ── User Requested Color Overrides ── */
+
+/* 1. Text that was currently dark green -> 1A2530 */
+.text-pine, .text-pine-dark, .text-pine-mid {
+  color: #1A2530 !important;
+}
+.hover\:text-pine:hover, .hover\:text-pine-dark:hover {
+  color: #1A2530 !important;
+}
+
+/* 2. Fix contrast: previously bg-pine was dark and text was cream (white).
+      Now bg-pine is CDD4CD (light gray), so text-cream inside it must be dark. */
+.bg-pine .text-cream, 
+.bg-pine-dark .text-cream, 
+.bg-pine-mid .text-cream {
+  color: #1A2530 !important;
+}
+
+/* Adjust borders on the new light background */
+.bg-pine .border-white\/10, 
+.bg-pine-dark .border-white\/10, 
+.bg-pine-dark .border-gold\/15,
+.bg-pine-dark .border-gold\/20 {
+  border-color: rgba(26, 37, 48, 0.2) !important;
+}
+
+/* Also ensure bg-pine defaults to the new text color */
+.bg-pine, .bg-pine-dark, .bg-pine-mid {
+  color: #1A2530 !important;
+}

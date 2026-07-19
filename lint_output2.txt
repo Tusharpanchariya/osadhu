@@ -1,0 +1,12 @@
+
+> osadho-records@0.1.0 lint
+> eslint
+
+
+D:\Osadhu\src\components\BookingSection.tsx
+   80:9   warning  Unused eslint-disable directive (no problems were reported)
+  354:16  warning  '_err' is defined but never used                             @typescript-eslint/no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

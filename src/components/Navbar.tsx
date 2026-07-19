@@ -51,22 +51,25 @@ export default function Navbar({ onOpenApplication }: NavbarProps) {
 
           {/* ── Logo ─────────────────────── */}
           <a
-            href="#"
-            onClick={(e) => { e.preventDefault(); scrollTo("#"); }}
-            className="group flex items-center gap-3"
-          >
-            {/* Small geometric mountain mark */}
-            <svg
-              width="22" height="22" viewBox="0 0 22 22" fill="none"
-              className="text-gold transition-transform duration-500 group-hover:rotate-6"
-            >
-              <polygon points="11,2 21,20 1,20" stroke="currentColor" strokeWidth="1.4" fill="none" />
-              <polygon points="11,9 16,20 6,20"  stroke="currentColor" strokeWidth="1"   fill="currentColor" fillOpacity="0.18" />
-            </svg>
-            <span className="font-sans font-semibold text-sm tracking-[0.22em] uppercase text-cream">
-              Osadho <span className="text-gold">Records</span>
-            </span>
-          </a>
+     
+
+  href="#"
+  onClick={(e) => { e.preventDefault(); scrollTo("#"); }}
+  className="group flex items-center gap-3"
+>
+  {/* Logo image */}
+  {/* eslint-disable-next-line @next/next/no-img-element */}
+  <img
+    src="/osadhu.png"
+    alt="Osadho Records"
+    width={50}
+    height={50}
+    className="transition-transform duration-500 group-hover:rotate-6"
+  />
+  <span className="font-sans font-semibold text-sm tracking-[0.22em] uppercase text-cream">
+    Osadho <span className="text-gold">Records</span>
+  </span>
+</a>
 
           {/* ── Desktop links ─────────────── */}
           <nav className="hidden lg:flex items-center gap-9">
