@@ -174,8 +174,6 @@ export default function ResidencyEnquiryForm({ isOpen, onClose, initialStartDate
     }
   };
 
-  if (isOpen === false) return null;
-
   return (
     <AnimatePresence>
       {isOpen !== false && (
