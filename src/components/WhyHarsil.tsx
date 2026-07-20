@@ -36,11 +36,11 @@ export default function WhyHarsil() {
           style={{ fontSize: "clamp(1.8rem, 4.5vw, 4rem)" }}
         >
           Silence. Space.{" "}
-          <em className="font-normal text-gold" style={{ fontStyle: "italic" }}>
+          <em className="font-normal text-[#98B098]" style={{ fontStyle: "italic" }}>
             Stillness.
           </em>
           <br />
-          <span className="font-normal text-cream/50 text-[0.8em]">
+          <span className="font-normal text-[#98B098] text-[0.8em]">
             The rare conditions where creativity naturally flourishes.
           </span>
         </h2>

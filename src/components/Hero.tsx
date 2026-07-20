@@ -75,7 +75,7 @@ export default function Hero({ onOpenApplication, onOpenTour }: HeroProps) {
         >
           Where music
           <br />
-          <em className="font-serif font-normal not-italic text-gold" style={{ fontStyle: "italic" }}>
+          <em className="font-serif font-normal not-italic text-[#98B098]" style={{ fontStyle: "italic" }}>
             finds its home in the mountains.
           </em>
         </motion.h1>

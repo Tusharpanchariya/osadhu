@@ -45,7 +45,7 @@ export default function WhereWeAre() {
               style={{ fontSize: "clamp(2.2rem, 5vw, 4.2rem)" }}
             >
               Find us in the<br />
-              <em className="font-normal text-gold" style={{ fontStyle: "italic" }}>Himalayan heights.</em>
+              <em className="font-normal text-[#98B098]" style={{ fontStyle: "italic" }}>Himalayan heights.</em>
             </h2>
           </motion.div>
           

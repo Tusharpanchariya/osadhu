@@ -51,7 +51,7 @@ export default function About() {
           style={{ fontSize: "clamp(2.4rem, 5vw, 4.5rem)" }}
         >
           A sanctuary<br />
-          <em className="font-normal text-gold" style={{ fontStyle: "italic" }}>
+          <em className="font-normal text-[#98B098]" style={{ fontStyle: "italic" }}>
             for creative souls.
           </em>
         </motion.h2>

@@ -52,11 +52,7 @@ export default function StudioTour() {
   ];
 
   return (
-    <section id="tour" className="relative py-28 md:py-36 px-6 md:px-8 lg:px-16 bg-gradient-to-br from-[#Cdd4cd] via-[#ff5757]/40 to-[#8c52ff]/50 text-pine-dark overflow-hidden z-0">
-      {/* Decorative gradients */}
-      <div className="absolute top-0 right-0 w-full h-[800px] bg-gradient-to-bl from-[#ff5757]/60 to-transparent filter blur-[100px] pointer-events-none opacity-80" />
-      <div className="absolute bottom-0 left-0 w-full h-[800px] bg-gradient-to-tr from-[#8c52ff]/60 to-transparent filter blur-[120px] pointer-events-none opacity-80" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-gradient-to-r from-[#ff5757]/40 via-[#8c52ff]/40 to-[#ff5757]/40 rounded-full filter blur-[160px] pointer-events-none opacity-60 animate-[spin_20s_linear_infinite]" />
+    <section id="tour" className="relative py-28 md:py-36 px-6 md:px-8 lg:px-16 bg-[#CDD4CD] text-pine-dark overflow-hidden z-0">
 
       <div className="max-w-7xl mx-auto relative z-10 backdrop-blur-[2px]">
         {/* Title */}

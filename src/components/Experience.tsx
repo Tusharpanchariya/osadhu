@@ -48,7 +48,7 @@ export default function Experience() {
           style={{ fontSize: "clamp(2.2rem, 4.5vw, 4rem)" }}
         >
           Slow living &amp;<br />
-          <em className="font-normal text-earth" style={{ fontStyle: "italic" }}>expanded Creation.</em>
+          <em className="font-normal text-[#98B098]" style={{ fontStyle: "italic" }}>expanded Creation.</em>
         </motion.h2>
       </div>
 
@@ -78,7 +78,7 @@ export default function Experience() {
 
             {/* Text */}
             <div className="flex flex-col justify-center gap-5">
-              <span className="font-sans text-[10px] tracking-[0.35em] uppercase text-gold font-semibold">
+              <span className="font-sans text-[10px] tracking-[0.35em] uppercase text-[#98B098] font-semibold">
                 {block.tag}
               </span>
               <h3
@@ -87,7 +87,7 @@ export default function Experience() {
               >
                 {block.title}
               </h3>
-              <p className="font-sans text-pine/60 text-sm md:text-[15px] leading-[1.85] font-light max-w-sm">
+              <p className="font-sans text-[#98B098] text-sm md:text-[15px] leading-[1.85] font-light max-w-sm">
                 {block.body}
               </p>
             </div>
