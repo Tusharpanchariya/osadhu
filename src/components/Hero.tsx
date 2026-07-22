@@ -2,19 +2,16 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, X, Volume2, VolumeX, ChevronDown } from "lucide-react";
+import { X, Volume2, VolumeX, ChevronDown } from "lucide-react";
 
-interface HeroProps {
-  onOpenApplication: () => void;
-  onOpenTour: () => void;
-}
+export default function Hero() {
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const videoUrl =
   "https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c054ba208d1c683c07cb81d6d8da7d85&profile_id=164&oauth2_token_id=57447761";
 
-export default function Hero({ onOpenApplication, onOpenTour }: HeroProps) {
+
   const [tourOpen, setTourOpen] = useState(false);
   const [muted, setMuted]       = useState(true);
   const videoRef                = useRef<HTMLVideoElement>(null);
@@ -76,7 +73,7 @@ export default function Hero({ onOpenApplication, onOpenTour }: HeroProps) {
           Where music
           <br />
           <em className="font-serif font-normal not-italic text-[#98B098]" style={{ fontStyle: "italic" }}>
-            finds its home in the mountains.
+            echoes in the mountains.
           </em>
         </motion.h1>
 

@@ -22,7 +22,7 @@ export default function FinalCTA({ onOpenApplication }: Props) {
           viewport={{ once: true }} transition={{ duration: 0.8, ease }}
           className="font-sans text-[10px] tracking-[0.4em] uppercase text-pine font-bold"
         >
-          Your creative escape awaits for you
+          your creative escape
         </motion.p>
 
         <motion.h2
@@ -32,7 +32,7 @@ export default function FinalCTA({ onOpenApplication }: Props) {
           style={{ fontSize: "clamp(2.2rem, 5vw, 4.5rem)" }}
         >
           Ready to create<br />
-          <em className="text-gold font-normal" style={{ fontStyle: "italic" }}>in the Himalayas?</em>
+          <em className="text-[#4c5867] font-normal" style={{ fontStyle: "italic" }}>in the Himalayas?</em>
         </motion.h2>
 
         <motion.p

@@ -41,7 +41,7 @@ export default function WhyHarsil() {
           </em>
           <br />
           <span className="font-normal text-[#98B098] text-[0.8em]">
-            The rare conditions where creativity naturally flourishes.
+            Where creativity naturally blooms.
           </span>
         </h2>
         <div className="w-8 h-[1px] bg-gold/40 mx-auto mt-10 mb-8" />

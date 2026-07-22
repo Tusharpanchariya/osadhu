@@ -18,7 +18,6 @@ import StudioCalendar from "@/components/StudioCalendar";
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState("");
-  const [calendarKey, setCalendarKey] = useState(0);
   const [isEnquiryFormOpen, setIsEnquiryFormOpen] = useState(false);
 
   const handleOpenApplication = () => {
@@ -30,24 +29,7 @@ export default function Home() {
     setIsEnquiryFormOpen(true);
   };
 
-  const handleBookingConfirmed = () => {
-    // Increment calendar key to instantly trigger a re-fetch of reserved slots
-    setCalendarKey((prev) => prev + 1);
-  };
 
-  const handleOpenTour = () => {
-    const tourSection = document.getElementById("tour");
-    if (tourSection) {
-      tourSection.scrollIntoView({ behavior: "smooth" });
-      // Small timeout to allow scrolling to complete before opening the modal
-      setTimeout(() => {
-        const playButton = tourSection.querySelector(".group") as HTMLElement;
-        if (playButton) {
-          playButton.click();
-        }
-      }, 800);
-    }
-  };
 
   return (
     <SmoothScroll>
@@ -55,10 +37,7 @@ export default function Home() {
       
       <main className="relative flex flex-col w-full">
         {/* Hero Section */}
-        <Hero 
-          onOpenApplication={handleOpenApplication} 
-          onOpenTour={handleOpenTour} 
-        />
+        <Hero />
         
         {/* About Section */}
         <About />
@@ -93,7 +72,7 @@ export default function Home() {
               </p>
             </div>
             
-            <StudioCalendar key={calendarKey} onSelectDate={handleOpenApplicationWithDate} />
+            <StudioCalendar onSelectDate={handleOpenApplicationWithDate} />
           </div>
         </section>
         

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronRight, Calendar, Info, Loader2, Sparkles, Mic, Monitor, Headphones, X, ArrowRight, ArrowLeft } from "lucide-react";
+import { Check, Calendar, Info, Loader2, Sparkles, Mic, Monitor, Headphones, X, ArrowRight, ArrowLeft } from "lucide-react";
 
 const SERVICES_OPTIONS = [
   "Recording", "Vocal Recording", "Instrument Recording", "Podcast Recording", "Live Session Recording",
@@ -73,9 +73,7 @@ export default function ResidencyEnquiryForm({ isOpen, onClose, initialStartDate
   });
 
   useEffect(() => {
-    if (initialStartDate) {
-      setFormData(prev => ({ ...prev, startDate: initialStartDate }));
-    }
+    // Remove the state update from the effect because initialStartDate is now handled by the initial state of formData
     // Prevent body scroll when open
     if (isOpen) {
       document.body.style.overflow = 'hidden';
