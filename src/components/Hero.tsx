@@ -85,8 +85,35 @@ const videoUrl =
           className="w-10 h-[1px] bg-gold/50 mt-8 mb-8 origin-center"
         />
 
-        {/* Two buttons */}
-
+        {/* Two buttons (Matching reference screenshot) */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8, duration: 0.9, ease }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById("book-session-section");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth" });
+                const btn = el.querySelector("button") as HTMLButtonElement | null;
+                if (btn) btn.click();
+              }
+            }}
+            className="w-full sm:w-auto px-8 py-4 bg-gold hover:bg-gold-lt text-ink font-bold text-xs uppercase tracking-[0.25em] transition-all duration-300 shadow-xl shadow-gold/20 hover:shadow-gold/35 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          >
+            BOOK A SESSION
+          </button>
+          <button
+            type="button"
+            onClick={() => document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" })}
+            className="w-full sm:w-auto px-8 py-4 border border-white/20 hover:border-gold text-cream hover:text-gold font-bold text-xs uppercase tracking-[0.25em] transition-all duration-300 glass-dark cursor-pointer"
+          >
+            EXPLORE SERVICES
+          </button>
+        </motion.div>
       </div>
 
       {/* ── SCROLL INDICATOR ────────────────────────────────────── */}

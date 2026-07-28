@@ -37,7 +37,7 @@ export default function Experience() {
         <motion.p
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.8, ease }}
-          className="font-sans text-[10px] tracking-[0.4em] uppercase text-earth mb-4"
+          className="font-sans text-[10px] tracking-[0.4em] uppercase text-[#98B098] font-semibold mb-4"
         >
           THE EXPERIENCE
         </motion.p>

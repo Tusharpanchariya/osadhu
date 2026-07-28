@@ -16,6 +16,8 @@ import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import StudioCalendar from "@/components/StudioCalendar";
 
+import BookingSection from "@/components/BookingSection";
+
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState("");
   const [isEnquiryFormOpen, setIsEnquiryFormOpen] = useState(false);
@@ -28,8 +30,6 @@ export default function Home() {
     setSelectedDate(date);
     setIsEnquiryFormOpen(true);
   };
-
-
 
   return (
     <SmoothScroll>
@@ -48,7 +48,6 @@ export default function Home() {
         {/* Studio Tour Section */}
         <StudioTour />
 
-        
         {/* Who Is This For Marquee */}
         <Marquee />
         
@@ -59,22 +58,11 @@ export default function Home() {
           initialStartDate={selectedDate}
         />
         
-        {/* Studio Availability Calendar Section */}
-        <section id="calendar" className="bg-ink py-24 md:py-36 border-t border-white/5">
-          <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-14">
-            <div className="text-center mb-16 space-y-4">
-              <p className="font-sans text-[10px] tracking-[0.4em] uppercase text-gold">Check Availability</p>
-              <h2 className="font-serif font-bold text-cream text-4xl md:text-5xl leading-none">
-                Studio Calendar
-              </h2>
-              <p className="text-cream/40 max-w-md mx-auto font-sans text-xs tracking-wider uppercase font-light">
-                Select an available date below to begin your residency application.
-              </p>
-            </div>
-            
-            <StudioCalendar onSelectDate={handleOpenApplicationWithDate} />
-          </div>
-        </section>
+        {/* Book Session Section (Rebuilt following exact flow from screenshots) */}
+        <BookingSection 
+          selectedDate={selectedDate}
+          onBookingConfirmed={() => {}}
+        />
         
         {/* Apply for Residency CTA Section */}
         <section className="bg-cream py-24 md:py-36 px-6 relative overflow-hidden">

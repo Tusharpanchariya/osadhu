@@ -5,16 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar as CalendarIcon, CreditCard, Sparkles, AlertCircle, Info, 
   Landmark, HelpCircle, Loader2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  Globe, Music, Video, Link, Phone, FileText, User
+  X, Check, Plus, MessageSquare, ShieldAlert, User, Phone, Globe, FileText, ArrowRight
 } from "lucide-react";
 import Script from "next/script";
 import confetti from "canvas-confetti";
 
 interface BookingRange {
   start_date: string;
-  end_date: string;
-  booking_type: string;
+  end_date?: string;
+  booking_type?: string;
   time_slot?: string | null;
+  room?: string;
 }
 
 interface BlockedDate {
@@ -24,68 +25,132 @@ interface BlockedDate {
 
 interface BookingSectionProps {
   selectedDate?: string;
-  onBookingConfirmed: () => void;
+  onBookingConfirmed?: () => void;
 }
+
+const ROOMS = [
+  { id: "studio-a", name: "Studio A", label: "STUDIO A" },
+  { id: "studio-b", name: "Studio B", label: "STUDIO B" },
+  { id: "studio-c", name: "Studio C", label: "STUDIO C" },
+  { id: "dj-room", name: "DJ Room", label: "DJ ROOM" },
+  { id: "event-space", name: "Event Space", label: "EVENT SPACE" },
+  { id: "hour-bundles", name: "Hour Bundles", label: "HOUR BUNDLES →" },
+];
+
+const PACKAGES_BY_ROOM: Record<string, string[]> = {
+  "studio-a": [
+    "Studio A — Full Day Residency Session (12h)",
+    "Studio A — Half Day Recording (6h)",
+    "Studio A — Hourly Recording & Mixing",
+    "Studio A — Full Album Residency Package"
+  ],
+  "studio-b": [
+    "Studio B — Production & Vocal Session (6h)",
+    "Studio B — Hourly Recording",
+    "Studio B — Beatmaking & Scoring Day Pass"
+  ],
+  "studio-c": [
+    "Studio C — Vocal Tracking & Editing (4h)",
+    "Studio C — Hourly Podcast & Voiceover"
+  ],
+  "dj-room": [
+    "DJ Room — Rehearsal & Mix Recording (2h)",
+    "DJ Room — Full Day Deck Pass (8h)"
+  ],
+  "event-space": [
+    "Event Space — Listening Party & Launch",
+    "Event Space — Workshop / Masterclass Session"
+  ],
+  "hour-bundles": [
+    "10-Hour Flex Studio Bundle",
+    "25-Hour Artist Residency Bundle",
+    "50-Hour Master Residency Bundle"
+  ]
+};
+
+const TIME_SLOTS = [
+  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
+  "18:00", "18:30", "19:00", "19:30", "20:00"
+];
+
+const DURATIONS = [
+  "Min. 1 hour",
+  "2 hours",
+  "3 hours",
+  "4 hours (Half Day)",
+  "6 hours",
+  "8 hours (Full Day)",
+  "12 hours (Day & Night)"
+];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function BookingSection({ selectedDate = "", onBookingConfirmed }: BookingSectionProps) {
-  // Required fields
+  // Flag to toggle whether the interactive booking flow is expanded or showing the initial CTA cover
+  const [isFlowExpanded, setIsFlowExpanded] = useState(false);
+
+  // Selected Room
+  const [selectedRoom, setSelectedRoom] = useState("studio-a");
+  
+  // Weekly Calendar Navigation State
+  const [weekStartDate, setWeekStartDate] = useState<Date>(() => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  });
+
+  // Drawer / Side Panel open state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Accordion section state in Drawer (Step 1 to 5)
+  const [openAccordion, setOpenAccordion] = useState<number>(1);
+
+  // Form Fields
+  const [selectedPackage, setSelectedPackage] = useState("");
+  const [bookingDate, setBookingDate] = useState(selectedDate || new Date().toISOString().split("T")[0]);
+  const [startTime, setStartTime] = useState("09:00");
+  const [duration, setDuration] = useState("Min. 1 hour");
+  const [additionalDates, setAdditionalDates] = useState<{ date: string; time: string }[]>([]);
+
+  // User Credentials
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-
-  // Optional fields
-  const [projectArtistName, setProjectArtistName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [instagramUrl, setInstagramUrl] = useState("");
-  const [spotifyUrl, setSpotifyUrl] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [soundcloudUrl, setSoundcloudUrl] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [phone, setPhone] = useState("");
+  const [artistName, setArtistName] = useState("");
+  const [socialLink, setSocialLink] = useState("");
   const [messageNotes, setMessageNotes] = useState("");
 
-  // Booking states
-  const [bookingType, setBookingType] = useState<"single" | "range">("range");
-  const [startDate, setStartDate] = useState(selectedDate);
-  const [endDate, setEndDate] = useState("");
-  const [timeSlot, setTimeSlot] = useState("09:00 AM - 03:00 PM");
-  
-  // Hover & selection helper for range picker
-  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  // Payment Option
+  const [paymentGateway, setPaymentGateway] = useState<"razorpay" | "paypal" | "pay_later">("pay_later");
 
-  // Toggle optional fields section
-  const [showOptional, setShowOptional] = useState(false);
+  // Account Modal / Sign in simulator
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "create">("signin");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPass, setAuthPass] = useState("");
 
   // Availability datasets
   const [bookings, setBookings] = useState<BookingRange[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-  const [loadingAvailability, setLoadingAvailability] = useState(true);
 
-  // Month navigation for date-picker
-  const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
-
-  // Confirm states
+  // Submission & Confirmed state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [paymentGateway, setPaymentGateway] = useState<"razorpay" | "paypal" | "pay_later">("pay_later");
 
-  // Sync prop selectedDate
-  useEffect(() => {
-    if (selectedDate) {
-      // eslint-disable-next-line
-      setStartDate(selectedDate);
-      if (bookingType === "single") {
-        setEndDate(selectedDate);
-      }
-    }
-  }, [selectedDate, bookingType]);
+  // Pricelist Modal State
+  const [showPricelistModal, setShowPricelistModal] = useState(false);
 
   // Fetch availability data on mount
   const fetchAvailability = async () => {
     try {
-      setLoadingAvailability(true);
       const res = await fetch("/api/bookings");
       if (res.ok) {
         const data = await res.json();
@@ -94,164 +159,130 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
       }
     } catch (err) {
       console.error("Failed to load availability:", err);
-    } finally {
-      setLoadingAvailability(false);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line
     fetchAvailability();
   }, []);
 
-  const totalDays = (() => {
-    if (bookingType === "single") return 1;
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (end >= start) {
-        return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      }
+  useEffect(() => {
+    if (selectedDate) {
+      setBookingDate(selectedDate);
+      setIsFlowExpanded(true);
     }
-    return 1;
+  }, [selectedDate]);
+
+  // Set default package when room changes
+  useEffect(() => {
+    const defaultPkg = PACKAGES_BY_ROOM[selectedRoom]?.[0] || "";
+    setSelectedPackage(defaultPkg);
+  }, [selectedRoom]);
+
+  // Calculate 6 week days starting from weekStartDate
+  const weekDays = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(weekStartDate);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const formattedWeekRange = (() => {
+    if (weekDays.length === 0) return "";
+    const start = weekDays[0];
+    const end = weekDays[weekDays.length - 1];
+    const startDay = start.getDate();
+    const startMonth = start.toLocaleString("default", { month: "short" });
+    const endDay = end.getDate();
+    const endMonth = end.toLocaleString("default", { month: "short" });
+    const endYear = end.getFullYear();
+
+    return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`;
   })();
 
-  // Date Checker logic for interactive calendar
-  const getDateStatus = (dateStr: string) => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    if (dateStr < todayStr) return "past";
-
-    // 1. Check manual blocked dates
-    const isBlocked = blockedDates.some((b) => b.date === dateStr);
-    if (isBlocked) return "blocked";
-
-    // 2. Check range bookings covering this day
-    const rangeBookings = bookings.filter((b) => b.booking_type === "range");
-    const isRangeBooked = rangeBookings.some((b) => dateStr >= b.start_date && dateStr <= b.end_date);
-    if (isRangeBooked) return "booked";
-
-    // 3. Check single slot bookings
-    const singleBookings = bookings.filter((b) => b.booking_type === "single" && b.start_date === dateStr);
-    if (singleBookings.length >= 3) {
-      return "booked"; // All 3 slots booked
-    } else if (singleBookings.length > 0) {
-      return "limited"; // Some slots free
-    }
-
-    return "available";
+  const handlePrevWeek = () => {
+    const newStart = new Date(weekStartDate);
+    newStart.setDate(newStart.getDate() - 7);
+    setWeekStartDate(newStart);
   };
 
-  // Calendar render details
-  const year = currentMonthDate.getFullYear();
-  const month = currentMonthDate.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const handlePrevMonth = () => setCurrentMonthDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentMonthDate(new Date(year, month + 1, 1));
-
-  const selectDateFromPicker = (dateStr: string) => {
-    setErrorMsg("");
-    if (bookingType === "single") {
-      setStartDate(dateStr);
-      setEndDate(dateStr);
-    } else {
-      if (!startDate || (startDate && endDate)) {
-        setStartDate(dateStr);
-        setEndDate("");
-      } else {
-        if (dateStr < startDate) {
-          // If clicked date is before start date, treat it as new start date
-          setStartDate(dateStr);
-        } else {
-          // Check range availability before confirming end date
-          const tempDate = new Date(startDate);
-          const finalDate = new Date(dateStr);
-          let conflict = false;
-
-          while (tempDate <= finalDate) {
-            const currentStr = tempDate.toISOString().split("T")[0];
-            const status = getDateStatus(currentStr);
-            if (status === "booked" || status === "blocked") {
-              conflict = true;
-              break;
-            }
-            tempDate.setDate(tempDate.getDate() + 1);
-          }
-
-          if (conflict) {
-            setErrorMsg("Your selected range contains unavailable/reserved dates. Please choose another range.");
-            setStartDate(dateStr);
-            setEndDate("");
-          } else {
-            setEndDate(dateStr);
-          }
-        }
-      }
-    }
+  const handleNextWeek = () => {
+    const newStart = new Date(weekStartDate);
+    newStart.setDate(newStart.getDate() + 7);
+    setWeekStartDate(newStart);
   };
 
-  const getDayClassNames = (dateStr: string) => {
-    const status = getDateStatus(dateStr);
-    const base = "h-11 rounded-md text-xs font-semibold font-sans relative flex items-center justify-center transition-all duration-200 border";
-    
-    // Status colors
-    if (status === "past") {
-      return `${base} text-cream/20 bg-white/2 border-white/5 cursor-not-allowed line-through`;
-    }
-    if (status === "blocked") {
-      return `${base} text-red-400/40 bg-red-950/10 border-red-950/20 cursor-not-allowed`;
-    }
-    if (status === "booked") {
-      return `${base} text-gold/30 bg-gold/5 border-gold/10 cursor-not-allowed`;
-    }
+  // Helper to check if slot is booked
+  const isSlotBooked = (dateStr: string, timeSlot: string) => {
+    if (blockedDates.some((b) => b.date === dateStr)) return true;
 
-    // Interactive highlights
-    const isSelectedStart = startDate === dateStr;
-    const isSelectedEnd = endDate === dateStr;
-    const isInRange = startDate && endDate && dateStr > startDate && dateStr < endDate;
-    const isHoverRange = startDate && !endDate && hoveredDate && dateStr > startDate && dateStr <= hoveredDate;
+    const dayOfWeek = new Date(dateStr).getDay();
+    if (dayOfWeek === 5 && (timeSlot >= "14:00" && timeSlot <= "18:00")) return true;
+    if (dayOfWeek === 6 && (timeSlot >= "15:00" && timeSlot <= "19:30")) return true;
 
-    if (isSelectedStart || isSelectedEnd) {
-      return `${base} bg-gold text-ink-soft border-gold scale-105 shadow-md shadow-gold/25 z-10`;
-    }
-    if (isInRange || isHoverRange) {
-      return `${base} bg-gold/20 text-gold border-gold/35 z-10`;
-    }
+    return bookings.some((b) => {
+      const isDateMatch = b.start_date <= dateStr && (!b.end_date || b.end_date >= dateStr);
+      const isRoomMatch = !b.room || b.room === selectedRoom;
+      const isTimeMatch = !b.time_slot || b.time_slot.includes(timeSlot);
+      return isDateMatch && isRoomMatch && isTimeMatch;
+    });
+  };
 
-    if (status === "limited") {
-      return `${base} text-yellow-300 bg-yellow-500/10 border-yellow-500/20 hover:border-gold hover:text-gold cursor-pointer`;
-    }
+  const handleCellClick = (dateStr: string, timeSlot: string) => {
+    if (isSlotBooked(dateStr, timeSlot)) return;
+    setBookingDate(dateStr);
+    setStartTime(timeSlot);
+    setIsDrawerOpen(true);
+    setOpenAccordion(1);
+  };
 
-    // Default Available
-    return `${base} text-cream bg-white/5 border-white/10 hover:bg-gold hover:text-ink-soft hover:border-gold hover:scale-105 cursor-pointer`;
+  const handleOpenBookingFlow = () => {
+    setIsFlowExpanded(true);
+    setTimeout(() => {
+      document.getElementById("booking-flow-container")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const handleAddAnotherDate = () => {
+    setAdditionalDates((prev) => [
+      ...prev,
+      { date: bookingDate, time: startTime }
+    ]);
+  };
+
+  const handleRemoveAdditionalDate = (index: number) => {
+    setAdditionalDates((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSimulateAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail) return;
+    setIsSignedIn(true);
+    setName(authEmail.split("@")[0].replace(".", " ").toUpperCase());
+    setEmail(authEmail);
+    setShowAuthModal(false);
   };
 
   const executeBooking = async (paymentId: string = "PAY-TEST-MODE", status: string = "paid") => {
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
+      const roomObj = ROOMS.find(r => r.id === selectedRoom);
       const bookingPayload = {
         name,
         email,
-        booking_type: bookingType,
-        start_date: startDate,
-        end_date: bookingType === "single" ? startDate : endDate,
-        time_slot: bookingType === "single" ? timeSlot : null,
+        room: roomObj?.name || selectedRoom,
+        package: selectedPackage,
+        start_date: bookingDate,
+        end_date: bookingDate,
+        time_slot: startTime,
+        duration: duration,
+        additional_dates: additionalDates,
         payment_method: paymentGateway,
         payment_status: status,
         payment_id: paymentId,
-        // Optional parameters
-        instagram_url: instagramUrl || null,
-        spotify_url: spotifyUrl || null,
-        youtube_url: youtubeUrl || null,
-        soundcloud_url: soundcloudUrl || null,
-        website_url: websiteUrl || null,
-        phone_number: phoneNumber || null,
-        project_artist_name: projectArtistName || null,
+        phone_number: phone || null,
+        project_artist_name: artistName || null,
+        social_link: socialLink || null,
         message_notes: messageNotes || null
       };
 
@@ -264,19 +295,17 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Reservation failed.");
 
-      setBookingRef(result.booking.booking_reference);
+      setBookingRef(result.booking?.booking_reference || `OSD-${Math.floor(100000 + Math.random() * 900000)}`);
       setIsConfirmed(true);
       
-      // Instantly trigger re-fetch of datasets across calendar views
-      onBookingConfirmed();
+      if (onBookingConfirmed) onBookingConfirmed();
       fetchAvailability();
 
-      // Confetti splash
       confetti({
-        particleCount: 100,
+        particleCount: 120,
         spread: 80,
         origin: { y: 0.6 },
-        colors: ["#C6A56B", "#F5F0E8", "#1E372D"]
+        colors: ["#CDD4CD", "#F5F0E8", "#1A2530"]
       });
     } catch (err: unknown) {
       setErrorMsg((err as Error).message || "Reservation processing error.");
@@ -285,580 +314,952 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
     }
   };
 
-  const handleBookingProcess = async (e: React.FormEvent) => {
+  const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !startDate) {
-      setErrorMsg("Please fill in your name, email, and select dates.");
-      return;
-    }
-    if (bookingType === "range" && !endDate) {
-      setErrorMsg("Please select an end date for residency stay.");
+    if (!name || !email) {
+      setOpenAccordion(4);
+      setErrorMsg("Please provide your Name and Email address in 'YOUR DETAILS'.");
       return;
     }
 
     setIsSubmitting(true);
 
-    // Re-verify availability dynamically
-    if (bookingType === "single") {
-      const isBlocked = blockedDates.some((b) => b.date === startDate);
-      const isBooked = bookings.some((b) => b.booking_type === "single" && b.start_date === startDate && b.time_slot === timeSlot);
-      const isFullyBooked = bookings.some((b) => b.booking_type === "range" && startDate >= b.start_date && startDate <= b.end_date);
-      if (isBlocked || isBooked || isFullyBooked) {
-        setErrorMsg("The selected date or slot has been reserved. Please pick another slot.");
-        setIsSubmitting(false);
-        return;
-      }
-    } else {
-      const temp = new Date(startDate);
-      const endLimit = new Date(endDate);
-      let conflict = false;
-      while (temp <= endLimit) {
-        const checkStr = temp.toISOString().split("T")[0];
-        const status = getDateStatus(checkStr);
-        if (status === "booked" || status === "blocked") {
-          conflict = true;
-          break;
-        }
-        temp.setDate(temp.getDate() + 1);
-      }
-      if (conflict) {
-        setErrorMsg("One or more dates in your selected range are occupied. Please select another slot.");
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
-    // Payment Processing
     if (paymentGateway === "pay_later") {
       await executeBooking("PAY-LATER-TEST-MODE", "pending");
     } else if (paymentGateway === "razorpay") {
       try {
         const options = {
           key: "rzp_test_placeholder",
-          amount: totalDays * 15000 * 100, // ₹15,000 per day in paise
+          amount: 1500000,
           currency: "INR",
-          name: "Osadho Records",
-          description: "Residency Reservation Payment",
+          name: "Osadhu Studio",
+          description: `${selectedRoom.toUpperCase()} Booking`,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           handler: function (response: any) {
             executeBooking(response.razorpay_payment_id || "PAY-RAZORPAY", "paid");
           },
           prefill: { name, email },
-          theme: { color: "#C6A56B" }
+          theme: { color: "#CDD4CD" }
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
         setIsSubmitting(false);
       } catch {
-        setErrorMsg("Razorpay script not ready. Falling back to test transaction.");
         await executeBooking("PAY-RAZORPAY-SIMULATED", "paid");
       }
-    } else if (paymentGateway === "paypal") {
+    } else {
       setTimeout(async () => {
-        await executeBooking("PAY-PAYPAL-SANDBOX-ID", "paid");
+        await executeBooking("PAY-PAYPAL-SANDBOX", "paid");
       }, 1000);
     }
   };
 
-  const handleReset = () => {
-    setName("");
-    setEmail("");
-    setProjectArtistName("");
-    setPhoneNumber("");
-    setInstagramUrl("");
-    setSpotifyUrl("");
-    setYoutubeUrl("");
-    setSoundcloudUrl("");
-    setWebsiteUrl("");
-    setMessageNotes("");
-    setStartDate("");
-    setEndDate("");
-    setIsConfirmed(false);
-    setErrorMsg("");
-    setBookingRef("");
-  };
-
-  // Build grid calendar cells
-  const calendarCells = [];
-  for (let i = 0; i < firstDayIndex; i++) {
-    calendarCells.push(<div key={`empty-picker-${i}`} className="h-11 bg-transparent border border-white/5 opacity-0" />);
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    const formatted = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const status = getDateStatus(formatted);
-    calendarCells.push(
-      <button
-        key={`picker-day-${d}`}
-        type="button"
-        disabled={status === "past" || status === "booked" || status === "blocked"}
-        onClick={() => selectDateFromPicker(formatted)}
-        onMouseEnter={() => setHoveredDate(formatted)}
-        onMouseLeave={() => setHoveredDate(null)}
-        className={getDayClassNames(formatted)}
-      >
-        <span>{d}</span>
-        {status === "limited" && (
-          <span className="absolute bottom-1 w-1 h-1 rounded-full bg-yellow-300" />
-        )}
-      </button>
-    );
-  }
+  const roomObj = ROOMS.find(r => r.id === selectedRoom);
 
   return (
-    <section id="booking-form-section" className="bg-ink py-24 md:py-36 border-t border-white/5 relative">
+    <section id="book-session-section" className="bg-ink py-24 md:py-36 border-t border-white/5 relative text-cream font-sans overflow-hidden">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
 
-      <div className="max-w-4xl mx-auto px-6 relative z-10">
-        
-        {/* Section Header */}
-        <div className="text-center mb-16 space-y-4">
-          <p className="font-sans text-[10px] tracking-[0.4em] uppercase text-gold">Reservations Portal</p>
-          <h2 className="font-serif font-bold text-cream text-4xl md:text-5xl leading-none">
-            Secure Your Stay
-          </h2>
-          <p className="text-cream/40 max-w-md mx-auto font-sans text-xs tracking-wider uppercase font-light">
-            Fill in required credentials, choose dates on the availability picker, and complete checkout.
-          </p>
+      {/* Ambient background lighting */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/5 blur-[140px] pointer-events-none rounded-full" />
+
+      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-14 relative z-10">
+
+        {/* ── 1. LUXURY CTA HERO SECTION (Displayed before user clicks "BOOK A SESSION") ── */}
+        <div className="relative border border-white/10 bg-gradient-to-b from-ink-soft/90 via-ink-soft/50 to-ink/90 p-10 md:p-20 text-center rounded-none shadow-2xl overflow-hidden group">
+          {/* Subtle background texture highlight */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+            {/* Studio Branding Accent */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, ease }}
+              className="font-sans text-[11px] tracking-[0.4em] uppercase text-gold font-bold"
+            >
+              OSADHO RECORDING STUDIOS
+            </motion.p>
+
+            {/* Luxurious Serif Title matching screenshot style */}
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.1, ease }}
+              className="font-serif font-bold text-cream text-5xl md:text-7xl lg:text-8xl tracking-tight leading-none"
+            >
+              Book a <span className="font-serif font-normal italic text-gold">Session</span>
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.2, ease }}
+              className="font-sans text-cream/70 text-base md:text-lg font-light leading-relaxed max-w-xl mx-auto tracking-wide"
+            >
+              A world-class recording sanctuary beside the river in Harsil Valley — built for artists who take their sound seriously.
+            </motion.p>
+
+            {/* Action CTA Buttons (as shown in reference screenshot) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.3, ease }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+            >
+              <button
+                type="button"
+                onClick={handleOpenBookingFlow}
+                className="w-full sm:w-auto px-10 py-5 bg-gold hover:bg-gold-lt text-ink font-bold text-xs uppercase tracking-[0.25em] transition-all duration-300 shadow-xl shadow-gold/15 hover:shadow-gold/30 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3 cursor-pointer"
+              >
+                <span>BOOK A SESSION</span>
+                <ArrowRight className="w-4 h-4 text-ink" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPricelistModal(true)}
+                className="w-full sm:w-auto px-10 py-5 border border-white/20 hover:border-gold text-cream hover:text-gold font-bold text-xs uppercase tracking-[0.25em] transition-all duration-300 glass-dark cursor-pointer"
+              >
+                EXPLORE SERVICES &amp; PRICELIST
+              </button>
+            </motion.div>
+          </div>
         </div>
 
-        {isConfirmed ? (
-          /* Confirmation Success Box */
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-ink-soft border border-gold/30 rounded-2xl p-8 md:p-12 text-center flex flex-col items-center gap-6 shadow-2xl"
-          >
-            <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
-              <Sparkles className="w-6 h-6 text-gold" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-serif text-3xl font-bold text-cream">Booking Confirmed</h3>
-              <p className="text-gold uppercase tracking-[0.25em] text-[11px] font-bold">
-                Reference: {bookingRef}
-              </p>
-            </div>
-            <p className="text-cream/50 text-sm leading-relaxed max-w-md font-sans font-light">
-              Your booking has been successfully confirmed. Selected dates have been reserved. Confirmation details have been sent to <span className="font-semibold text-cream">{email}</span>.
-            </p>
-            <button
-              onClick={handleReset}
-              className="mt-6 text-[10px] tracking-widest uppercase font-bold border border-gold/30 hover:border-gold text-gold hover:text-cream px-8 py-3.5 rounded-sm transition-all duration-300"
+        {/* ── 2. EXPANDABLE BOOKING EXPERIENCE (REVEALED AFTER CLICKING "BOOK A SESSION") ── */}
+        <AnimatePresence>
+          {isFlowExpanded && (
+            <motion.div
+              id="booking-flow-container"
+              initial={{ opacity: 0, height: 0, y: 30 }}
+              animate={{ opacity: 1, height: "auto", y: 0 }}
+              exit={{ opacity: 0, height: 0, y: 30 }}
+              transition={{ duration: 0.8, ease }}
+              className="mt-20 pt-16 border-t border-white/10 space-y-12"
             >
-              Book Another Residency
-            </button>
-          </motion.div>
-        ) : (
-          /* Main Interactive Booking Form */
-          <form onSubmit={handleBookingProcess} className="bg-ink-soft border border-white/5 rounded-2xl p-6 md:p-10 shadow-2xl space-y-8">
-            
-            {errorMsg && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-red-950/20 border border-red-900/30 text-red-400 text-xs rounded-lg flex items-start gap-3"
-              >
-                <AlertCircle className="w-4.5 h-4.5 text-red-500 flex-shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
-              </motion.div>
-            )}
 
-            {/* Toggle Stay Type */}
-            <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-lg border border-white/5">
-              <button
-                type="button"
-                onClick={() => {
-                  setBookingType("single");
-                  setStartDate("");
-                  setEndDate("");
-                }}
-                className={`py-3 rounded-md text-[10px] uppercase tracking-widest font-bold font-sans transition-all duration-300 ${
-                  bookingType === "single"
-                    ? "bg-gold text-ink-soft shadow-lg"
-                    : "text-cream/50 hover:text-cream"
-                }`}
-              >
-                Single Day Session
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setBookingType("range");
-                  setStartDate("");
-                  setEndDate("");
-                }}
-                className={`py-3 rounded-md text-[10px] uppercase tracking-widest font-bold font-sans transition-all duration-300 ${
-                  bookingType === "range"
-                    ? "bg-gold text-ink-soft shadow-lg"
-                    : "text-cream/50 hover:text-cream"
-                }`}
-              >
-                Residency Stay (Date Range)
-              </button>
-            </div>
+              {/* Sub-Header & Close/Collapse button */}
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/10">
+                <div className="space-y-3">
+                  <p className="font-sans text-[10px] tracking-[0.35em] uppercase text-gold font-bold">
+                    INTERACTIVE RESERVATION PORTAL
+                  </p>
+                  <h3 className="font-serif font-bold text-cream text-3xl md:text-4xl tracking-tight">
+                    Select Your Room &amp; Session Time
+                  </h3>
+                  <p className="text-xs text-cream/50 max-w-xl leading-relaxed font-light">
+                    Choose a studio space below, browse live timetable slot availability, and select a time slot to complete your reservation details.
+                  </p>
+                </div>
 
-            {/* Availability Date Picker Calendar Embedded Directly */}
-            <div className="space-y-4">
-              <label className="text-[10px] uppercase tracking-widest text-cream/40 font-bold flex items-center gap-1.5">
-                <CalendarIcon className="w-3.5 h-3.5 text-gold" />
-                Select Booking Date {bookingType === "range" ? "Range" : ""}
-              </label>
+                <button
+                  type="button"
+                  onClick={() => setIsFlowExpanded(false)}
+                  className="self-start md:self-auto text-[10px] uppercase tracking-widest text-cream/40 hover:text-gold transition-colors font-bold flex items-center gap-2 border border-white/10 px-4 py-2"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>CLOSE BOOKING FORM</span>
+                </button>
+              </div>
 
-              <div className="border border-white/5 bg-black/30 rounded-xl p-5">
-                {/* Picker navigation */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
-                  <span className="font-serif text-sm font-semibold text-cream">
-                    {monthNames[month]} {year}
-                  </span>
-                  <div className="flex items-center gap-1.5">
+              {/* Have an Osadhu account? Banner (matching reference screenshot layout) */}
+              <div className="border border-white/10 bg-ink-soft/90 p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
+                <div className="space-y-1.5 max-w-2xl">
+                  <h4 className="font-sans font-bold text-sm text-cream tracking-wide">
+                    {isSignedIn ? `Welcome back, ${name}!` : "Have an Osadhu account?"}
+                  </h4>
+                  <p className="text-xs text-cream/50 font-light leading-relaxed">
+                    {isSignedIn
+                      ? "Your details fill in automatically — and everything you book or buy is saved to your account."
+                      : "Sign in and your details fill in automatically — and everything you book or buy is saved to your account. New here? Create one in seconds. Or just continue as a guest below."}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {isSignedIn ? (
                     <button
                       type="button"
-                      onClick={handlePrevMonth}
-                      className="w-7 h-7 rounded border border-white/10 text-cream/60 hover:text-gold flex items-center justify-center transition-colors"
+                      onClick={() => setIsSignedIn(false)}
+                      className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest border border-white/20 hover:border-gold text-cream transition-colors"
                     >
-                      <ChevronLeft className="w-3.5 h-3.5" />
+                      Sign Out
                     </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { setAuthMode("signin"); setShowAuthModal(true); }}
+                        className="px-6 py-2.5 bg-gold text-ink hover:bg-gold-lt text-[10px] font-bold uppercase tracking-widest transition-all shadow-md cursor-pointer"
+                      >
+                        SIGN IN
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setAuthMode("create"); setShowAuthModal(true); }}
+                        className="px-6 py-2.5 border border-white/20 hover:border-gold text-cream text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer"
+                      >
+                        CREATE ACCOUNT
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Room Selector Tab Bar */}
+              <div className="space-y-4">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-bold block">
+                  SELECT A ROOM
+                </span>
+                <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
+                  {ROOMS.map((room) => {
+                    const isActive = selectedRoom === room.id;
+                    return (
+                      <button
+                        key={room.id}
+                        type="button"
+                        onClick={() => setSelectedRoom(room.id)}
+                        className={`px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer ${
+                          isActive
+                            ? "border border-gold text-gold bg-gold/10 shadow-lg shadow-gold/5"
+                            : "border border-white/10 text-cream/50 hover:text-cream hover:border-white/25"
+                        }`}
+                      >
+                        {room.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Active Room Indicator */}
+              <div className="flex items-center justify-between border-y border-white/10 py-3.5 px-2 text-xs">
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] uppercase tracking-widest text-cream/40 font-bold">ROOM —</span>
+                  <span className="font-bold text-cream tracking-wide uppercase">{roomObj?.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextIndex = (ROOMS.findIndex(r => r.id === selectedRoom) + 1) % ROOMS.length;
+                    setSelectedRoom(ROOMS[nextIndex].id);
+                  }}
+                  className="text-[10px] uppercase tracking-widest text-cream/50 hover:text-gold transition-colors font-bold cursor-pointer"
+                >
+                  CHANGE
+                </button>
+              </div>
+
+              {/* Weekly Availability Timetable Grid */}
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-gold font-bold block">
+                      AVAILABILITY
+                    </span>
+                    <p className="text-xs text-cream/70 font-light">
+                      {roomObj?.name} — select a time that works for you
+                    </p>
+                  </div>
+
+                  {/* Week navigation */}
+                  <div className="flex items-center gap-4">
                     <button
                       type="button"
-                      onClick={handleNextMonth}
-                      className="w-7 h-7 rounded border border-white/10 text-cream/60 hover:text-gold flex items-center justify-center transition-colors"
+                      onClick={handlePrevWeek}
+                      className="w-8 h-8 border border-white/15 text-cream/70 hover:text-gold hover:border-gold flex items-center justify-center transition-colors cursor-pointer"
+                      title="Previous Week"
                     >
-                      <ChevronRight className="w-3.5 h-3.5" />
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="font-sans font-bold text-xs tracking-wider text-cream">
+                      {formattedWeekRange}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleNextWeek}
+                      className="w-8 h-8 border border-white/15 text-cream/70 hover:text-gold hover:border-gold flex items-center justify-center transition-colors cursor-pointer"
+                      title="Next Week"
+                    >
+                      <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {loadingAvailability ? (
-                  <div className="h-44 flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-gold" />
-                    <span className="text-[9px] uppercase tracking-widest text-cream/30">Loading availability...</span>
+                {/* Timetable Grid Container */}
+                <div className="border border-white/10 bg-black/40 overflow-x-auto shadow-2xl">
+                  <div className="min-w-[720px]">
+                    
+                    {/* Day Headers Row */}
+                    <div className="grid grid-cols-7 border-b border-white/10 bg-ink-soft text-center text-xs py-3 font-bold uppercase tracking-wider">
+                      <div className="py-2 text-cream/30 text-[10px] uppercase border-r border-white/5">TIME</div>
+                      {weekDays.map((d, idx) => {
+                        const dayName = d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+                        const dayNum = d.getDate();
+                        const isToday = d.toISOString().split("T")[0] === new Date().toISOString().split("T")[0];
+                        return (
+                          <div key={idx} className="py-2 space-y-0.5 border-r border-white/5 last:border-r-0">
+                            <span className={`text-[10px] block ${isToday ? "text-gold font-extrabold" : "text-cream/50"}`}>
+                              {dayName}
+                            </span>
+                            <span className={`text-sm block ${isToday ? "text-gold font-bold" : "text-cream"}`}>
+                              {dayNum}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Time slots rows */}
+                    <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
+                      {TIME_SLOTS.map((slot) => {
+                        const isHalfHour = slot.endsWith(":30");
+                        return (
+                          <div key={slot} className="grid grid-cols-7 text-xs font-sans group">
+                            <div className="py-2 px-3 border-r border-white/5 text-cream/40 text-[11px] font-mono flex items-center justify-end pr-4 bg-ink/40">
+                              {isHalfHour ? <span className="text-[10px] text-cream/25">:30</span> : slot}
+                            </div>
+
+                            {weekDays.map((d, dayIdx) => {
+                              const dateStr = d.toISOString().split("T")[0];
+                              const booked = isSlotBooked(dateStr, slot);
+                              const isSelected = bookingDate === dateStr && startTime === slot && isDrawerOpen;
+
+                              return (
+                                <button
+                                  key={dayIdx}
+                                  type="button"
+                                  disabled={booked}
+                                  onClick={() => handleCellClick(dateStr, slot)}
+                                  className={`h-10 border-r border-white/5 last:border-r-0 transition-all duration-150 relative flex items-center justify-center text-[10px] uppercase font-bold tracking-wider ${
+                                    booked
+                                      ? "bg-amber-950/40 text-gold/60 cursor-not-allowed border-amber-900/20"
+                                      : isSelected
+                                      ? "bg-gold text-ink border-gold z-10 shadow-lg shadow-gold/20"
+                                      : "hover:bg-gold/15 hover:border-gold/30 cursor-pointer"
+                                  }`}
+                                >
+                                  {booked && (
+                                    <span className="text-[9px] tracking-widest text-amber-300/70 uppercase font-semibold">
+                                      BOOKED
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Banner */}
+              <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <p className="text-cream/50 text-xs tracking-wide font-light">
+                  Not sure which room or package to choose?
+                </p>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPricelistModal(true)}
+                    className="px-6 py-3 border border-gold/40 hover:border-gold text-gold text-[10px] font-bold uppercase tracking-[0.2em] transition-colors cursor-pointer"
+                  >
+                    VIEW FULL PRICELIST
+                  </button>
+                  <a
+                    href="https://wa.me/919999999999?text=Hi%20Osadhu%20Studio,%20I'm%20interested%20in%20booking%20a%20session."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3 border border-white/15 hover:border-white/40 text-cream text-[10px] font-bold uppercase tracking-[0.2em] transition-colors flex items-center gap-2"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-gold" />
+                    WHATSAPP US
+                  </a>
+                </div>
+              </div>
+
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
+
+      {/* ── 3. BOOKING SIDE DRAWER PANEL (Slides in when user clicks an available slot) ── */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDrawerOpen(false)}
+              className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50"
+            />
+
+            {/* Right Drawer */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 260 }}
+              className="fixed top-0 right-0 bottom-0 w-full max-w-lg bg-ink-soft border-l border-white/10 z-50 overflow-y-auto flex flex-col shadow-2xl font-sans text-cream"
+            >
+              {/* Drawer Header */}
+              <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/50 sticky top-0 z-20 backdrop-blur-md">
+                <div>
+                  <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold block">
+                    YOUR BOOKING
+                  </span>
+                  <h3 className="font-serif font-bold text-xl text-cream tracking-wide">
+                    {roomObj?.name}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="w-9 h-9 rounded-full border border-white/15 hover:border-gold text-cream/70 hover:text-cream flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Drawer Body Accordion Steps */}
+              <div className="p-6 space-y-4 flex-1">
+
+                {errorMsg && (
+                  <div className="p-4 bg-red-950/40 border border-red-900/50 text-red-400 text-xs rounded flex items-start gap-3">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                {isConfirmed ? (
+                  /* Confirmation Success View */
+                  <div className="py-8 space-y-6 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold flex items-center justify-center mx-auto text-gold">
+                      <Sparkles className="w-7 h-7" />
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-serif text-3xl font-bold text-cream">Booking Reserved!</h4>
+                      <p className="text-gold text-xs uppercase tracking-widest font-bold">
+                        Reference: {bookingRef}
+                      </p>
+                    </div>
+                    <p className="text-xs text-cream/60 leading-relaxed font-light max-w-sm mx-auto">
+                      Thank you <span className="text-cream font-bold">{name}</span>. Your reservation for <span className="text-gold font-semibold">{roomObj?.name}</span> on <span className="text-cream font-semibold">{bookingDate} ({startTime})</span> has been submitted.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsConfirmed(false);
+                        setIsDrawerOpen(false);
+                      }}
+                      className="w-full py-4 bg-gold text-ink font-bold text-[10px] uppercase tracking-widest hover:bg-gold-lt transition-colors shadow-lg cursor-pointer"
+                    >
+                      DONE &amp; CLOSE PANEL
+                    </button>
                   </div>
                 ) : (
-                  <>
-                    <div className="grid grid-cols-7 gap-1 text-center mb-1 text-[9px] uppercase tracking-wider text-cream/30 font-bold">
-                      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                        <span key={day} className="py-1">{day}</span>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1">
-                      {calendarCells}
-                    </div>
+                  <form onSubmit={handleSubmitBooking} className="space-y-3">
+                    
+                    {/* STEP 1: BOOKING Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 1 ? 0 : 1)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>BOOKING</span>
+                        {openAccordion === 1 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
 
-                    {/* Interactive inline guidance */}
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5 text-[9px] text-cream/45 uppercase tracking-wider">
-                      <span>
-                        {bookingType === "range" ? (
-                          !startDate ? "1. Click start date" : !endDate ? "2. Click end date" : "Range selected"
-                        ) : (
-                          !startDate ? "Click date to select" : "Date selected"
+                      <AnimatePresence>
+                        {openAccordion === 1 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4 text-xs"
+                          >
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                PACKAGE *
+                              </label>
+                              <select
+                                value={selectedPackage}
+                                onChange={(e) => setSelectedPackage(e.target.value)}
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                              >
+                                {(PACKAGES_BY_ROOM[selectedRoom] || []).map((pkg) => (
+                                  <option key={pkg} value={pkg} className="bg-ink text-cream">
+                                    {pkg}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                  DATE *
+                                </label>
+                                <input
+                                  type="date"
+                                  value={bookingDate}
+                                  onChange={(e) => setBookingDate(e.target.value)}
+                                  className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                                />
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                  START TIME *
+                                </label>
+                                <select
+                                  value={startTime}
+                                  onChange={(e) => setStartTime(e.target.value)}
+                                  className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                                >
+                                  {TIME_SLOTS.map((t) => (
+                                    <option key={t} value={t} className="bg-ink text-cream">
+                                      {t}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                DURATION *
+                              </label>
+                              <select
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                              >
+                                {DURATIONS.map((dur) => (
+                                  <option key={dur} value={dur} className="bg-ink text-cream">
+                                    {dur}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {additionalDates.map((item, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-2.5 bg-white/5 border border-white/10 text-xs">
+                                <span className="text-cream/80">{item.date} at {item.time}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAdditionalDate(idx)}
+                                  className="text-red-400 hover:text-red-300 text-[10px] uppercase tracking-wider font-bold"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+
+                            <button
+                              type="button"
+                              onClick={handleAddAnotherDate}
+                              className="w-full py-2.5 border border-white/15 hover:border-gold text-gold text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              ADD ANOTHER DATE
+                            </button>
+                          </motion.div>
                         )}
-                      </span>
-                      <span>
-                        {startDate && `Selected: ${startDate} ${endDate ? `to ${endDate}` : ""}`}
-                      </span>
+                      </AnimatePresence>
                     </div>
 
-                    {/* Micro Calendar Legend */}
-                    <div className="flex flex-wrap gap-4 mt-3 text-[8px] uppercase tracking-widest font-semibold text-cream/30">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded bg-white/5 border border-white/15" />
-                        <span>Available</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded bg-yellow-500/10 border border-yellow-500/20" />
-                        <span>Limited Slots</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded bg-gold/10 border border-gold/25" />
-                        <span>Fully Booked</span>
-                      </div>
+                    {/* STEP 2: SESSION PREP Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 2 ? 0 : 2)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>SESSION PREP — {roomObj?.name.toUpperCase()}</span>
+                        {openAccordion === 2 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {openAccordion === 2 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-3 border-t border-white/5 pt-4 text-xs text-cream/70 font-light leading-relaxed"
+                          >
+                            <p>
+                              Our sound engineering team will prepare {roomObj?.name} prior to your arrival:
+                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-cream/60">
+                              <li>Acoustic calibration &amp; monitoring setup</li>
+                              <li>Microphone choices pre-checked and patched</li>
+                              <li>High-speed multitrack recording routing</li>
+                              <li>Complimentary beverage &amp; lounge access</li>
+                            </ul>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  </>
+
+                    {/* STEP 3: BEFORE YOU BOOK Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 3 ? 0 : 3)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>BEFORE YOU BOOK</span>
+                        {openAccordion === 3 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {openAccordion === 3 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-3 border-t border-white/5 pt-4 text-xs text-cream/70 font-light leading-relaxed"
+                          >
+                            <div className="flex items-start gap-2 text-gold">
+                              <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                              <span className="font-bold text-cream uppercase text-[10px] tracking-wider">Important Booking Policies</span>
+                            </div>
+                            <p>
+                              Please arrive 15 minutes before your scheduled start time. Cancellations made at least 24 hours prior are eligible for rescheduling. Full payment or valid deposit confirms room lock.
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* STEP 4: YOUR DETAILS Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 4 ? 0 : 4)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>YOUR DETAILS</span>
+                        {openAccordion === 4 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {openAccordion === 4 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4 text-xs"
+                          >
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                FULL NAME *
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Your full name"
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                EMAIL ADDRESS *
+                              </label>
+                              <input
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="name@example.com"
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                  PHONE NUMBER
+                                </label>
+                                <input
+                                  type="tel"
+                                  value={phone}
+                                  onChange={(e) => setPhone(e.target.value)}
+                                  placeholder="+91 99999 99999"
+                                  className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                                />
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                  PROJECT / ARTIST NAME
+                                </label>
+                                <input
+                                  type="text"
+                                  value={artistName}
+                                  onChange={(e) => setArtistName(e.target.value)}
+                                  placeholder="Artist / Band Name"
+                                  className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                INSTAGRAM / WEBSITE LINK
+                              </label>
+                              <input
+                                type="url"
+                                value={socialLink}
+                                onChange={(e) => setSocialLink(e.target.value)}
+                                placeholder="https://instagram.com/..."
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                SPECIAL NOTES / INSTRUMENTATION
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={messageNotes}
+                                onChange={(e) => setMessageNotes(e.target.value)}
+                                placeholder="Mention any specific microphones, instruments, or session preferences..."
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none resize-none"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* STEP 5: PAYMENT Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 5 ? 0 : 5)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>PAYMENT</span>
+                        {openAccordion === 5 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {openAccordion === 5 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4 text-xs"
+                          >
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                SELECT PAYMENT METHOD
+                              </label>
+
+                              <div className="space-y-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setPaymentGateway("razorpay")}
+                                  className={`w-full p-3.5 border flex items-center justify-between transition-colors ${
+                                    paymentGateway === "razorpay"
+                                      ? "border-gold bg-gold/10 text-gold"
+                                      : "border-white/10 bg-black/40 text-cream/60 hover:border-white/20"
+                                  }`}
+                                >
+                                  <span className="font-bold uppercase tracking-wider text-[11px]">Razorpay (Cards / UPI / NetBanking)</span>
+                                  <CreditCard className="w-4 h-4 opacity-70" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setPaymentGateway("paypal")}
+                                  className={`w-full p-3.5 border flex items-center justify-between transition-colors ${
+                                    paymentGateway === "paypal"
+                                      ? "border-gold bg-gold/10 text-gold"
+                                      : "border-white/10 bg-black/40 text-cream/60 hover:border-white/20"
+                                  }`}
+                                >
+                                  <span className="font-bold uppercase tracking-wider text-[11px]">PayPal (International)</span>
+                                  <Landmark className="w-4 h-4 opacity-70" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setPaymentGateway("pay_later")}
+                                  className={`w-full p-3.5 border flex items-center justify-between transition-colors ${
+                                    paymentGateway === "pay_later"
+                                      ? "border-gold bg-gold/10 text-gold"
+                                      : "border-white/10 bg-black/40 text-cream/60 hover:border-white/20"
+                                  }`}
+                                >
+                                  <div className="text-left">
+                                    <span className="font-bold uppercase tracking-wider text-[11px] block">Pay at Studio / Test Mode</span>
+                                    <span className="text-[9px] text-cream/40 block">Confirm reservation now, pay upon arrival</span>
+                                  </div>
+                                  <HelpCircle className="w-4 h-4 opacity-70" />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full mt-6 py-4 bg-gold hover:bg-gold-lt text-ink font-bold text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Processing Reservation...</span>
+                        </>
+                      ) : (
+                        <span>CONFIRM &amp; BOOK SESSION</span>
+                      )}
+                    </button>
+
+                  </form>
                 )}
+
               </div>
-            </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-            {/* Time Slot Select (For Single Day Only) */}
-            {bookingType === "single" && startDate && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col gap-2"
-              >
-                <label className="text-[10px] uppercase tracking-widest text-cream/40 font-bold">
-                  Select Time Slot
-                </label>
-                <select
-                  value={timeSlot}
-                  onChange={(e) => setTimeSlot(e.target.value)}
-                  className="bg-black/30 border border-white/10 focus:border-gold rounded-md px-4 py-3 text-cream text-xs font-sans focus:outline-none transition-colors cursor-pointer appearance-none"
-                >
-                  <option value="09:00 AM - 03:00 PM">09:00 AM - 03:00 PM (Morning)</option>
-                  <option value="03:00 PM - 09:00 PM">03:00 PM - 09:00 PM (Evening)</option>
-                  <option value="09:00 PM - 03:00 AM">09:00 PM - 03:00 AM (Night Owl)</option>
-                </select>
-              </motion.div>
-            )}
-
-            {/* Required Fields Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
-              {/* Full Name */}
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-cream/40 font-bold flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-gold" />
-                  Full Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Tushar Sharma"
-                  className="bg-black/30 border border-white/10 focus:border-gold rounded-md px-4 py-3 text-cream placeholder:text-cream/20 text-xs font-sans focus:outline-none transition-colors"
-                />
-              </div>
-
-              {/* Email Address */}
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest text-cream/40 font-bold flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-gold" />
-                  Email Address <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. tushar@gmail.com"
-                  className="bg-black/30 border border-white/10 focus:border-gold rounded-md px-4 py-3 text-cream placeholder:text-cream/20 text-xs font-sans focus:outline-none transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Expandable Optional Fields Folder */}
-            <div className="border border-white/5 bg-black/10 rounded-xl overflow-hidden">
+      {/* ── Auth Modal Simulator ── */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-ink-soft border border-white/15 p-8 max-w-md w-full relative shadow-2xl"
+            >
               <button
                 type="button"
-                onClick={() => setShowOptional(!showOptional)}
-                className="w-full px-5 py-4 flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-cream/65 hover:text-cream transition-colors"
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-4 right-4 text-cream/50 hover:text-cream cursor-pointer"
               >
-                <span>Artist Details &amp; Social Links (Optional)</span>
-                {showOptional ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                <X className="w-5 h-5" />
               </button>
 
-              <AnimatePresence>
-                {showOptional && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.4, ease }}
-                    className="px-5 pb-6 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-5 pt-5"
-                  >
-                    {/* Project/Artist Name */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <User className="w-3 h-3 text-gold" /> Project / Artist Name
-                      </label>
-                      <input
-                        type="text"
-                        value={projectArtistName}
-                        onChange={(e) => setProjectArtistName(e.target.value)}
-                        placeholder="e.g. Shoorasena Trio"
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
+              <h3 className="font-serif font-bold text-2xl text-cream mb-1">
+                {authMode === "signin" ? "Sign In to Osadhu" : "Create Osadhu Account"}
+              </h3>
+              <p className="text-xs text-cream/50 mb-6 font-light">
+                {authMode === "signin"
+                  ? "Access your saved bookings and preferences."
+                  : "Quickly set up your account to manage your studio sessions."}
+              </p>
 
-                    {/* Phone Number */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-gold" /> Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="e.g. +91 99999 99999"
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
+              <form onSubmit={handleSimulateAuth} className="space-y-4 text-xs font-sans">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                    EMAIL ADDRESS
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="you@domain.com"
+                    className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream p-3 focus:outline-none"
+                  />
+                </div>
 
-                    {/* Instagram URL */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <Globe className="w-3 h-3 text-gold" /> Instagram URL
-                      </label>
-                      <input
-                        type="url"
-                        value={instagramUrl}
-                        onChange={(e) => setInstagramUrl(e.target.value)}
-                        placeholder="https://instagram.com/..."
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                    PASSWORD
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={authPass}
+                    onChange={(e) => setAuthPass(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream p-3 focus:outline-none"
+                  />
+                </div>
 
-                    {/* Spotify URL */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <Music className="w-3 h-3 text-gold" /> Spotify URL
-                      </label>
-                      <input
-                        type="url"
-                        value={spotifyUrl}
-                        onChange={(e) => setSpotifyUrl(e.target.value)}
-                        placeholder="https://open.spotify.com/..."
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
-
-                    {/* YouTube URL */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <Video className="w-3 h-3 text-gold" /> YouTube URL
-                      </label>
-                      <input
-                        type="url"
-                        value={youtubeUrl}
-                        onChange={(e) => setYoutubeUrl(e.target.value)}
-                        placeholder="https://youtube.com/..."
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
-
-                    {/* SoundCloud URL */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <Music className="w-3 h-3 text-gold" /> SoundCloud URL
-                      </label>
-                      <input
-                        type="url"
-                        value={soundcloudUrl}
-                        onChange={(e) => setSoundcloudUrl(e.target.value)}
-                        placeholder="https://soundcloud.com/..."
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Website URL */}
-                    <div className="flex flex-col gap-2 md:col-span-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <Link className="w-3 h-3 text-gold" /> Website URL
-                      </label>
-                      <input
-                        type="url"
-                        value={websiteUrl}
-                        onChange={(e) => setWebsiteUrl(e.target.value)}
-                        placeholder="https://yourwebsite.com"
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Message or Notes */}
-                    <div className="flex flex-col gap-2 md:col-span-2">
-                      <label className="text-[9px] uppercase tracking-wider text-cream/40 font-bold flex items-center gap-1">
-                        <FileText className="w-3 h-3 text-gold" /> Message or Project Notes
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={messageNotes}
-                        onChange={(e) => setMessageNotes(e.target.value)}
-                        placeholder="Detail your instrumentation, goals, or stay requests here..."
-                        className="bg-black/20 border border-white/5 focus:border-gold rounded-md px-3.5 py-2.5 text-cream placeholder:text-cream/25 text-xs font-sans focus:outline-none resize-none"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Totals calculation banner */}
-            {startDate && (
-              <div className="p-4 rounded-xl bg-white/2 border border-white/5 flex items-center justify-between text-xs font-sans">
-                <span className="text-cream/50">Residency Stay Period:</span>
-                <span className="font-bold text-gold">
-                  {totalDays} {totalDays === 1 ? "Day" : "Days"} (₹{ (totalDays * 15000).toLocaleString() } Total)
-                </span>
-              </div>
-            )}
-
-            {/* Payment selections */}
-            <div className="space-y-3 pt-4 border-t border-white/5">
-              <label className="text-[10px] uppercase tracking-widest text-cream/40 font-bold block">
-                Select Payment Option
-              </label>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Razorpay */}
                 <button
-                  type="button"
-                  onClick={() => setPaymentGateway("razorpay")}
-                  className={`p-4 rounded-xl border flex items-center justify-between transition-all duration-300 font-sans ${
-                    paymentGateway === "razorpay"
-                      ? "bg-gold/10 border-gold text-gold"
-                      : "bg-black/20 border-white/5 text-cream/60 hover:border-white/20"
-                  }`}
+                  type="submit"
+                  className="w-full py-3.5 bg-gold hover:bg-gold-lt text-ink font-bold text-[11px] uppercase tracking-widest transition-colors mt-2 cursor-pointer"
                 >
-                  <span className="text-xs font-bold uppercase tracking-wider">Razorpay</span>
-                  <CreditCard className="w-4.5 h-4.5 opacity-70" />
+                  {authMode === "signin" ? "SIGN IN" : "CREATE ACCOUNT"}
                 </button>
-
-                {/* PayPal */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentGateway("paypal")}
-                  className={`p-4 rounded-xl border flex items-center justify-between transition-all duration-300 font-sans ${
-                    paymentGateway === "paypal"
-                      ? "bg-gold/10 border-gold text-gold"
-                      : "bg-black/20 border-white/5 text-cream/60 hover:border-white/20"
-                  }`}
-                >
-                  <span className="text-xs font-bold uppercase tracking-wider">PayPal</span>
-                  <Landmark className="w-4.5 h-4.5 opacity-70" />
-                </button>
-
-                {/* Pay Later */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentGateway("pay_later")}
-                  className={`p-4 rounded-xl border flex items-center justify-between transition-all duration-300 font-sans ${
-                    paymentGateway === "pay_later"
-                      ? "bg-gold/10 border-gold text-gold"
-                      : "bg-black/20 border-white/5 text-cream/60 hover:border-white/20"
-                  }`}
-                >
-                  <span className="text-xs font-bold uppercase tracking-wider text-left">
-                    Pay Later
-                    <span className="block text-[8px] font-light normal-case tracking-normal text-cream/40 mt-0.5">
-                      Simulated Test Mode
-                    </span>
-                  </span>
-                  <HelpCircle className="w-4.5 h-4.5 opacity-70" />
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm reservations */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gold hover:bg-gold-lt text-ink-soft py-4 rounded-md text-[10px] uppercase tracking-widest font-bold transition-all duration-300 shadow-xl hover:shadow-gold/20 flex items-center justify-center gap-2.5 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying Availability &amp; Checkout...</span>
-                </>
-              ) : (
-                <>
-                  <span>
-                    {paymentGateway === "pay_later" ? "Confirm Booking (Test Mode)" : "Proceed to Payment &amp; Confirm"}
-                  </span>
-                </>
-              )}
-            </button>
-          </form>
+              </form>
+            </motion.div>
+          </div>
         )}
-      </div>
+      </AnimatePresence>
+
+      {/* ── Pricelist Modal ── */}
+      <AnimatePresence>
+        {showPricelistModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-ink-soft border border-white/15 p-8 max-w-2xl w-full relative shadow-2xl max-h-[85vh] overflow-y-auto"
+            >
+              <button
+                type="button"
+                onClick={() => setShowPricelistModal(false)}
+                className="absolute top-4 right-4 text-cream/50 hover:text-cream cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <p className="text-[10px] uppercase tracking-[0.3em] text-gold font-bold mb-1">
+                OSADHO RECORDING STUDIOS
+              </p>
+              <h3 className="font-serif font-bold text-3xl text-cream mb-6">
+                Complete Pricelist &amp; Rates
+              </h3>
+
+              <div className="space-y-6 text-xs font-sans">
+                {ROOMS.map((r) => (
+                  <div key={r.id} className="border-b border-white/10 pb-4">
+                    <h4 className="font-bold text-sm text-gold uppercase tracking-wider mb-2">{r.name}</h4>
+                    <ul className="space-y-1.5 text-cream/70">
+                      {(PACKAGES_BY_ROOM[r.id] || []).map((p, idx) => (
+                        <li key={idx} className="flex items-center justify-between">
+                          <span>{p}</span>
+                          <span className="font-mono text-cream font-bold">Starting from ₹3,500/hr</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </section>
   );
 }
