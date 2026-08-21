@@ -368,7 +368,7 @@ async function sendEmails(
       </div>
       <div style="background-color: #ffffff; padding: 30px; border-radius: 6px; border: 1px solid rgba(198, 165, 107, 0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
         <p style="font-size: 15px; line-height: 1.6; margin-top: 0;">Dear ${name},</p>
-        <p style="font-size: 15px; line-height: 1.6;">Your booking at Osadho Records has been successfully confirmed. Your selected dates have been reserved.</p>
+        <p style="font-size: 15px; line-height: 1.6;">Thank you for your enquiry with Osadhu Records. We have received your request and our team will review the details. We will get back to you soon regarding your selected dates.</p>
         
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
           <tr>
@@ -403,7 +403,7 @@ async function sendEmails(
   const adminHtml = `
     <div style="font-family: 'DM Sans', Arial, sans-serif; background-color: #0D0D0D; color: #F5F0E8; padding: 40px 20px; max-width: 600px; margin: 0 auto; border-radius: 8px;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="font-family: Georgia, serif; color: #C6A56B; margin: 0; font-size: 22px; letter-spacing: 0.1em;">CONFIRMED BOOKING ALERT</h2>
+        <h2 style="font-family: Georgia, serif; color: #C6A56B; margin: 0; font-size: 22px; letter-spacing: 0.1em;">NEW ENQUIRY ALERT</h2>
         <p style="color: #ffffff; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 5px;">Osadho Records Portal</p>
       </div>
       <div style="background-color: #141414; padding: 30px; border-radius: 6px; border: 1px solid rgba(198, 165, 107, 0.15);">
@@ -484,7 +484,7 @@ async function sendEmails(
   await transporter.sendMail({
     from,
     to: email,
-    subject: `Booking Confirmed: ${bookingRef} - Osadho Records`,
+    subject: `Thank you for your enquiry - Osadhu Records`,
     html: clientHtml,
   });
 
@@ -492,7 +492,7 @@ async function sendEmails(
   await transporter.sendMail({
     from,
     to: adminEmail,
-    subject: `CONFIRMED: Booking Alert - ${bookingRef} (${name})`,
+    subject: `NEW ENQUIRY: ${bookingRef} (${name})`,
     html: adminHtml,
   });
 }

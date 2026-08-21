@@ -29,60 +29,27 @@ interface BookingSectionProps {
 }
 
 const ROOMS = [
-  { id: "studio-a", name: "Studio A", label: "STUDIO A" },
-  { id: "studio-b", name: "Studio B", label: "STUDIO B" },
-  { id: "studio-c", name: "Studio C", label: "STUDIO C" },
-  { id: "dj-room", name: "DJ Room", label: "DJ ROOM" },
-  { id: "event-space", name: "Event Space", label: "EVENT SPACE" },
-  { id: "hour-bundles", name: "Hour Bundles", label: "HOUR BUNDLES →" },
+  { id: "himalayan-studio", name: "Himalayan Studio", label: "HIMALAYAN STUDIO" },
 ];
 
 const PACKAGES_BY_ROOM: Record<string, string[]> = {
-  "studio-a": [
-    "Studio A — Full Day Residency Session (12h)",
-    "Studio A — Half Day Recording (6h)",
-    "Studio A — Hourly Recording & Mixing",
-    "Studio A — Full Album Residency Package"
-  ],
-  "studio-b": [
-    "Studio B — Production & Vocal Session (6h)",
-    "Studio B — Hourly Recording",
-    "Studio B — Beatmaking & Scoring Day Pass"
-  ],
-  "studio-c": [
-    "Studio C — Vocal Tracking & Editing (4h)",
-    "Studio C — Hourly Podcast & Voiceover"
-  ],
-  "dj-room": [
-    "DJ Room — Rehearsal & Mix Recording (2h)",
-    "DJ Room — Full Day Deck Pass (8h)"
-  ],
-  "event-space": [
-    "Event Space — Listening Party & Launch",
-    "Event Space — Workshop / Masterclass Session"
-  ],
-  "hour-bundles": [
-    "10-Hour Flex Studio Bundle",
-    "25-Hour Artist Residency Bundle",
-    "50-Hour Master Residency Bundle"
+  "himalayan-studio": [
+    "Himalayan Studio — Residency Session",
+    "Himalayan Studio — Recording & Mixing"
   ]
 };
 
 const TIME_SLOTS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "10:00", "10:30", "11:00", "11:30",
   "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-  "18:00", "18:30", "19:00", "19:30", "20:00"
+  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"
 ];
 
 const DURATIONS = [
-  "Min. 1 hour",
-  "2 hours",
-  "3 hours",
-  "4 hours (Half Day)",
-  "6 hours",
-  "8 hours (Full Day)",
-  "12 hours (Day & Night)"
+  "7 Days (Minimum)",
+  "14 Days",
+  "21 Days",
+  "30 Days (Full Month)"
 ];
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -91,8 +58,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
   // Flag to toggle whether the interactive booking flow is expanded or showing the initial CTA cover
   const [isFlowExpanded, setIsFlowExpanded] = useState(false);
 
-  // Selected Room
-  const [selectedRoom, setSelectedRoom] = useState("studio-a");
+  const [selectedRoom, setSelectedRoom] = useState("himalayan-studio");
   
   // Weekly Calendar Navigation State
   const [weekStartDate, setWeekStartDate] = useState<Date>(() => {
@@ -113,8 +79,8 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
   // Form Fields
   const [selectedPackage, setSelectedPackage] = useState("");
   const [bookingDate, setBookingDate] = useState(selectedDate || new Date().toISOString().split("T")[0]);
-  const [startTime, setStartTime] = useState("09:00");
-  const [duration, setDuration] = useState("Min. 1 hour");
+  const [startTime, setStartTime] = useState("10:00");
+  const [duration, setDuration] = useState("7 Days (Minimum)");
   const [additionalDates, setAdditionalDates] = useState<{ date: string; time: string }[]>([]);
 
   // User Credentials
@@ -272,6 +238,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
         email,
         room: roomObj?.name || selectedRoom,
         package: selectedPackage,
+        booking_type: "single", // Added to satisfy backend validation
         start_date: bookingDate,
         end_date: bookingDate,
         time_slot: startTime,
@@ -323,36 +290,7 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
     }
 
     setIsSubmitting(true);
-
-    if (paymentGateway === "pay_later") {
-      await executeBooking("PAY-LATER-TEST-MODE", "pending");
-    } else if (paymentGateway === "razorpay") {
-      try {
-        const options = {
-          key: "rzp_test_placeholder",
-          amount: 1500000,
-          currency: "INR",
-          name: "Osadhu Studio",
-          description: `${selectedRoom.toUpperCase()} Booking`,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          handler: function (response: any) {
-            executeBooking(response.razorpay_payment_id || "PAY-RAZORPAY", "paid");
-          },
-          prefill: { name, email },
-          theme: { color: "#CDD4CD" }
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rzp = new (window as any).Razorpay(options);
-        rzp.open();
-        setIsSubmitting(false);
-      } catch {
-        await executeBooking("PAY-RAZORPAY-SIMULATED", "paid");
-      }
-    } else {
-      setTimeout(async () => {
-        await executeBooking("PAY-PAYPAL-SANDBOX", "paid");
-      }, 1000);
-    }
+    await executeBooking("PAY-LATER-ENQUIRY", "pending");
   };
 
   const roomObj = ROOMS.find(r => r.id === selectedRoom);
@@ -880,6 +818,78 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
                       </AnimatePresence>
                     </div>
 
+                    {/* STEP 1.1: ADDITIONAL REQUIREMENTS Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 5 ? 0 : 5)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>ADDITIONAL REQUIREMENTS</span>
+                        {openAccordion === 5 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {openAccordion === 5 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4 text-xs"
+                          >
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                CHOOSE THE REQUIREMENT (ADDITIONAL) (IF ANY OTHER) DESCRIBE REQUIREMENT (EMAIL FORMAT)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={messageNotes}
+                                onChange={(e) => setMessageNotes(e.target.value)}
+                                placeholder="Write any additional requirements here..."
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none resize-none"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* STEP 1.2: ABOUT PROJECT Accordion */}
+                    <div className="border border-white/10 bg-black/30">
+                      <button
+                        type="button"
+                        onClick={() => setOpenAccordion(openAccordion === 6 ? 0 : 6)}
+                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
+                      >
+                        <span>ABOUT PROJECT</span>
+                        {openAccordion === 6 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {openAccordion === 6 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4 text-xs"
+                          >
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
+                                ABOUT PROJECT (DESCRIBE PROJECT)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={artistName}
+                                onChange={(e) => setArtistName(e.target.value)}
+                                placeholder="Describe your project..."
+                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none resize-none"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
                     {/* STEP 2: SESSION PREP Accordion */}
                     <div className="border border-white/10 bg-black/30">
                       <button
@@ -1007,120 +1017,23 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
 
                               <div className="space-y-1.5">
                                 <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
-                                  PROJECT / ARTIST NAME
+                                  INSTAGRAM / WEBSITE LINK
                                 </label>
                                 <input
-                                  type="text"
-                                  value={artistName}
-                                  onChange={(e) => setArtistName(e.target.value)}
-                                  placeholder="Artist / Band Name"
+                                  type="url"
+                                  value={socialLink}
+                                  onChange={(e) => setSocialLink(e.target.value)}
+                                  placeholder="https://instagram.com/..."
                                   className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
                                 />
                               </div>
                             </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
-                                INSTAGRAM / WEBSITE LINK
-                              </label>
-                              <input
-                                type="url"
-                                value={socialLink}
-                                onChange={(e) => setSocialLink(e.target.value)}
-                                placeholder="https://instagram.com/..."
-                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
-                                SPECIAL NOTES / INSTRUMENTATION
-                              </label>
-                              <textarea
-                                rows={3}
-                                value={messageNotes}
-                                onChange={(e) => setMessageNotes(e.target.value)}
-                                placeholder="Mention any specific microphones, instruments, or session preferences..."
-                                className="w-full bg-black/60 border border-white/15 focus:border-gold text-cream text-xs px-3.5 py-3 font-sans focus:outline-none resize-none"
-                              />
-                            </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
 
-                    {/* STEP 5: PAYMENT Accordion */}
-                    <div className="border border-white/10 bg-black/30">
-                      <button
-                        type="button"
-                        onClick={() => setOpenAccordion(openAccordion === 5 ? 0 : 5)}
-                        className="w-full p-4 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-cream hover:text-gold transition-colors text-left cursor-pointer"
-                      >
-                        <span>PAYMENT</span>
-                        {openAccordion === 5 ? <ChevronUp className="w-4 h-4 text-gold" /> : <ChevronDown className="w-4 h-4 text-gold" />}
-                      </button>
-
-                      <AnimatePresence>
-                        {openAccordion === 5 && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4 text-xs"
-                          >
-                            <div className="space-y-2">
-                              <label className="text-[10px] uppercase tracking-wider text-cream/50 font-bold block">
-                                SELECT PAYMENT METHOD
-                              </label>
-
-                              <div className="space-y-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setPaymentGateway("razorpay")}
-                                  className={`w-full p-3.5 border flex items-center justify-between transition-colors ${
-                                    paymentGateway === "razorpay"
-                                      ? "border-gold bg-gold/10 text-gold"
-                                      : "border-white/10 bg-black/40 text-cream/60 hover:border-white/20"
-                                  }`}
-                                >
-                                  <span className="font-bold uppercase tracking-wider text-[11px]">Razorpay (Cards / UPI / NetBanking)</span>
-                                  <CreditCard className="w-4 h-4 opacity-70" />
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => setPaymentGateway("paypal")}
-                                  className={`w-full p-3.5 border flex items-center justify-between transition-colors ${
-                                    paymentGateway === "paypal"
-                                      ? "border-gold bg-gold/10 text-gold"
-                                      : "border-white/10 bg-black/40 text-cream/60 hover:border-white/20"
-                                  }`}
-                                >
-                                  <span className="font-bold uppercase tracking-wider text-[11px]">PayPal (International)</span>
-                                  <Landmark className="w-4 h-4 opacity-70" />
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => setPaymentGateway("pay_later")}
-                                  className={`w-full p-3.5 border flex items-center justify-between transition-colors ${
-                                    paymentGateway === "pay_later"
-                                      ? "border-gold bg-gold/10 text-gold"
-                                      : "border-white/10 bg-black/40 text-cream/60 hover:border-white/20"
-                                  }`}
-                                >
-                                  <div className="text-left">
-                                    <span className="font-bold uppercase tracking-wider text-[11px] block">Pay at Studio / Test Mode</span>
-                                    <span className="text-[9px] text-cream/40 block">Confirm reservation now, pay upon arrival</span>
-                                  </div>
-                                  <HelpCircle className="w-4 h-4 opacity-70" />
-                                </button>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                    {/* Payment Step Removed */}
 
                     {/* Submit Button */}
                     <button
@@ -1131,10 +1044,10 @@ export default function BookingSection({ selectedDate = "", onBookingConfirmed }
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Processing Reservation...</span>
+                          <span>Processing Enquiry...</span>
                         </>
                       ) : (
-                        <span>CONFIRM &amp; BOOK SESSION</span>
+                        <span>SUBMIT ENQUIRY</span>
                       )}
                     </button>
 
