@@ -83,6 +83,34 @@ export default function Gallery() {
       image: "/images/studio_accommodation.png",
       size: "col-span-1 row-span-1",
     },
+    {
+      id: 8,
+      title: "Osadho Moments",
+      category: "studio",
+      image: "/images/gallery_dsc00769.jpg",
+      size: "col-span-1 row-span-1",
+    },
+    {
+      id: 9,
+      title: "Nature Immersion",
+      category: "nature",
+      image: "/images/gallery_dsc09742.jpg",
+      size: "col-span-1 row-span-1",
+    },
+    {
+      id: 10,
+      title: "Local Experience",
+      category: "artists",
+      image: "/images/gallery_dsc00818.jpg",
+      size: "col-span-1 row-span-1",
+    },
+    {
+      id: 11,
+      title: "Village Scenery",
+      category: "village",
+      image: "/images/gallery_dsc00765.jpg",
+      size: "col-span-1 md:col-span-2 row-span-1",
+    },
   ];
 
   const filteredItems =
